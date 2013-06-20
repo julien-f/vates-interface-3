@@ -1,6 +1,10 @@
 !function () {
 	'use strict';
 
+	var TYPE_POOL = 0;
+	var TYPE_HOST = 1;
+	var TYPE_VM   = 2;
+
 	////////////////////////////////////////
 
 	var	w = 1000;
@@ -40,6 +44,7 @@
 			links.push({
 				'source': center,
 				'target': pool,
+				'distance': 10,
 			});
 		});
 
@@ -53,8 +58,10 @@
 	force
 		// A negative value results in node repulsion, while a
 		// positive value results in node attraction.
-		.charge(-750)
-		.linkDistance(75)
+		.charge(-500)
+		.linkDistance(function (link) {
+			return link.distance || 75;
+		})
 		.gravity(0.1)
 	;
 
@@ -100,15 +107,7 @@
 			.attr("cy", function(d) { return d.y; })
 			.attr("r", 15)
 			.attr('fill', function (d) {
-				if (d.hosts)
-				{
-					return colors(0);
-				}
-				if (d.vms)
-				{
-					return colors(1);
-				}
-				return colors(2);
+				return colors(d.type);
 			})
 			.call(force.drag)
 		;
@@ -138,19 +137,20 @@
 
 	function create_nodes_and_links(pools)
 	{
-		var nodes = []; // Copies pools into nodes.
 		var links = [];
 
-		_.each(pools, function (pool, i) {
-			links.push({
-				'source': pool,
-				'target': pools[i+1] ? pools[i+1] : pools[0]
-			});
+		var hosts = [];
+		var vms   = [];
 
-			nodes.push(pool);
+		// Finds all nested hosts and VMs, defines their “type”
+		// attribute and creates links to their parent.
+		_.each(pools, function (pool) {
+			pool.type = TYPE_POOL;
 
 			_.each(pool.hosts, function (host) {
-				nodes.push(host);
+				hosts.push(host);
+
+				host.type = TYPE_HOST;
 
 				links.push({
 					'source': host,
@@ -158,7 +158,9 @@
 				});
 
 				_.each(host.vms, function (vm) {
-					nodes.push(vm);
+					vms.push(vm);
+
+					vms.type = TYPE_VM;
 
 					links.push({
 						'source': vm,
@@ -168,8 +170,36 @@
 			});
 		});
 
+		// Initially places pools, hosts and VMs on concentric
+		// circles.
+
+		var mid_h = h / 2;
+		var mid_w = w / 2;
+		var TWO_PI = 2 * Math.PI;
+
+		var alpha = TWO_PI / pools.length;
+		_.each(pools, function (pool, i) {
+			var alpha_i = alpha * i;
+			pool.x = Math.cos(alpha_i) * 100 + mid_w;
+			pool.y = Math.sin(alpha_i) * 100 + mid_h;
+		});
+
+		var alpha = TWO_PI / hosts.length;
+		_.each(hosts, function (host, i) {
+			var alpha_i = alpha * i;
+			host.x = Math.cos(alpha_i) * 200 + mid_w;
+			host.y = Math.sin(alpha_i) * 200 + mid_h;
+		});
+
+		var alpha = TWO_PI / vms.length;
+		_.each(vms, function (vm, i) {
+			var alpha_i = alpha * i;
+			vm.x = Math.cos(alpha_i) * 300 + mid_w;
+			vm.y = Math.sin(alpha_i) * 300 + mid_h;
+		});
+
 		return [
-			nodes,
+			pools.concat(hosts, vms),
 			links
 		];
 	}

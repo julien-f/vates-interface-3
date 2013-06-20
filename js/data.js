@@ -48,7 +48,7 @@ var data = [
 			}
 		]
 	},
-		{
+	{
 		"label": "Pool 3",
 		"hosts": [
 			{
@@ -63,7 +63,7 @@ var data = [
 			},
 		]
 	},
-		{
+	{
 		"label": "Pool 4",
 		"hosts": [
 			{
@@ -86,7 +86,7 @@ var data = [
 			},
 		]
 	},
-		{
+	{
 		"label": "Pool 5",
 		"hosts": [
 			{
