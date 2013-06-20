@@ -1,93 +1,176 @@
 !function () {
 	'use strict';
 
-	var		w = 1000;
-	var		h = 1000;
+	////////////////////////////////////////
 
-	var		pool
-	var		link;
-	var		root;
+	var	w = 1000;
+	var	h = 1000;
+
+	var link;
+	var node;
+
+	var colors = d3.scale.category10();
 
 	var force = d3.layout.force()
-	.on("tick", tick)
-	.size([w, h]);
+		.on("tick", tick)
+		.size([w, h])
+	;
 
 	var svg = d3.select("body").append("svg")
-	.attr("width", w)
-	.attr("height", h);
+		.attr("width", w)
+		.attr("height", h)
+	;
 
-	root = data ;
+	var tmp = create_nodes_and_links(data);
+	var nodes = tmp[0];
+	var links = tmp[1];
 
-	 update();
-////////////////////////////////////////////////////////////////////////////////
+	// Creates a new tree layout with the default settings.
+	//var links = d3.layout.tree().links(nodes);
 
-	function update() {
+	// Adds (hidden) virtual node at the center.
+	!function (nodes, links) {
+		var center = {};
 
-	var nodes = flatten(root);
-	// Creates a new tree layout with the default settings
-	var links = d3.layout.tree().links(nodes);
+		nodes = nodes.slice(0);
+		links = links.slice(0);
 
-	// Restart the force layout.
+		nodes.push(center);
+		_.each(data, function (pool) {
+			links.push({
+				'source': center,
+				'target': pool,
+			});
+		});
+
+
+		force
+			.links(links)
+			.nodes(nodes)
+		;
+	}(nodes, links);
 
 	force
-		// A negative value results in node repulsion, while a positive value results in node attraction.
-		.charge(-420)
-	    .nodes(nodes)
-	    .size([w, h])
-	    .linkDistance(30)
-	    .start();
+		// A negative value results in node repulsion, while a
+		// positive value results in node attraction.
+		.charge(-750)
+		.linkDistance(75)
+		.gravity(0.1)
+	;
 
-	// Update the links…
-	link = svg.selectAll(".link")
-	.data(links, function(d) { return d.target.label; });
+	update();
 
-	// Enter any new links.
-	link.enter().insert("line", ".link")
-	.attr("class", "link")
-	.attr("x1", function(d) { return d.source.x; })
-	.attr("y1", function(d) { return d.source.y; })
-	.attr("x2", function(d) { return d.target.x; })
-	.attr("y2", function(d) { return d.target.y; });
+	////////////////////////////////////////
 
-	// Exit any old links.
-	link.exit().remove();
+	function update()
+	{
+		force.start();
 
-	// Update the nodes…
-	pool= svg.selectAll(".pool")
-	.data(nodes, function(d) {return d.label})
+		// Updates the links.
+		link = svg.selectAll(".link")
+			.data(links, function(d, i) {
+				return i;
+			})
+		;
 
-	// Enter any new nodes.
-	pool.enter().append('g').append("circle")
-	.attr("class", "pool")
-	.attr("cx", function(d) { return d.x; })
-	.attr("cy", function(d) { return d.y; })
-	.attr("r", 25)
-	.call(force.drag);
-
-	// Exit any old nodes.
-	pool.exit().remove();
-	}
-////////////////////////////////////////////////////////////////////////////////
-	function tick() {
-
-		link.attr("x1", function(d) { return d.source.x; })
+		// Enter any new links.
+		link.enter().insert("line", ".link")
+			.attr("class", "link")
+			.attr("x1", function(d) { return d.source.x; })
 			.attr("y1", function(d) { return d.source.y; })
 			.attr("x2", function(d) { return d.target.x; })
-			.attr("y2", function(d) { return d.target.y; });
+			.attr("y2", function(d) { return d.target.y; })
+			.attr('stroke', 'black')
+		;
 
-		pool.attr("cx", function(d) { return d.x; })
-			.attr("cy", function(d) { return d.y; });
+		// Exit any old links.
+		link.exit().remove();
+
+		// Update the nodes.
+		node = svg.selectAll(".node")
+			.data(nodes, function(d, i) {
+				return i;
+			})
+		;
+
+		// Enter any new nodes.
+		node.enter().append("circle")
+			.attr("class", "node")
+			.attr("cx", function(d, i) { return d.x; })
+			.attr("cy", function(d) { return d.y; })
+			.attr("r", 15)
+			.attr('fill', function (d) {
+				if (d.hosts)
+				{
+					return colors(0);
+				}
+				if (d.vms)
+				{
+					return colors(1);
+				}
+				return colors(2);
+			})
+			.call(force.drag)
+		;
+
+		// Exit any old nodes.
+		node.exit().remove();
 	}
-////////////////////////////////////////////////////////////////////////////////
-	// Returns a list of all nodes under the root.
-	function flatten(root) {
-		var nodes = [], i = 0;
-		function recurse(pool) {
-			if (!pool.label) pool.label = ++i;
-				nodes.push(pool) ;
-		}
-		console.log(nodes);
-		recurse(root);
-		return nodes;
+
+	////////////////////////////////////////
+
+	function tick()
+	{
+		link
+			.attr("x1", function(d) { return d.source.x; })
+			.attr("y1", function(d) { return d.source.y; })
+			.attr("x2", function(d) { return d.target.x; })
+			.attr("y2", function(d) { return d.target.y; })
+		;
+
+		node
+			.attr("cx", function(d) { return d.x; })
+			.attr("cy", function(d) { return d.y; })
+		;
+	}
+
+	////////////////////////////////////////
+
+	function create_nodes_and_links(pools)
+	{
+		var nodes = []; // Copies pools into nodes.
+		var links = [];
+
+		_.each(pools, function (pool, i) {
+			links.push({
+				'source': pool,
+				'target': pools[i+1] ? pools[i+1] : pools[0]
+			});
+
+			nodes.push(pool);
+
+			_.each(pool.hosts, function (host) {
+				nodes.push(host);
+
+				links.push({
+					'source': host,
+					'target': pool,
+				});
+
+				_.each(host.vms, function (vm) {
+					nodes.push(vm);
+
+					links.push({
+						'source': vm,
+						'target': host,
+					});
+				});
+			});
+		});
+
+		return [
+			nodes,
+			links
+		];
 	}
 }();
