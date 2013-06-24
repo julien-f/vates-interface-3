@@ -181,12 +181,11 @@
 
 	////////////////////////////////////////
 
-	function clickelem(d,i)
+	function clickelem(d,current)
 	{
 
-		if (i  == No )
+		if (current == No )
 		{
-			console.log(4);
 			clickdezoom();
 
 		}
@@ -194,31 +193,36 @@
 		else
 		{
 
-		var x = (w/2-d.x*4);
-		var y = (h/2-d.y*4);
+			var x = (w/2-d.x*6);
+			var y = (h/2-d.y*6);
 
-			graph.transition().duration(200).attr(
-			"transform",
-			"translate("+(x) +","+(y) +") scale(" +4+ ")"
-			);
+				graph.transition().duration(400).attr(
+				"transform",
+				"translate("+(x) +","+(y) +") scale(" +6+ ")"
+				);
+
+				No = current ;
+
+			node.transition().duration(400).style("fill-opacity",function (d,i) { return i == current ? 1 : 0.1; });
+			link.transition().duration(400).style("stroke-opacity",0.1);
+
+			;
+
 		}
 
-		//graph.selectAll("circle").data(nodes, function(d, i != i ) {
-		//		return i ;
-		//	});
-			.attr("fill-opacity",10)
-		;
-
-		No = i ;
 		d3.event.stopPropagation();
+
 	}
 
 	function clickdezoom()
 	{
-		graph.transition().duration(200).attr(
+		graph.transition().duration(400).attr(
 			"transform",
 			"translate(0, 0) scale(1)"
 		);
+
+		node.transition().duration(400).style("fill-opacity",1);
+		link.transition().duration(400).style("stroke-opacity",1);
 
 		No = 0 ;
 	}
