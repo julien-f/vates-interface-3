@@ -4,11 +4,11 @@
 	// add translation
 	var No;
 
+	var activate; // solve the problem with zoom and move.
+
 	var TYPE_POOL = 0;
 	var TYPE_HOST = 1;
 	var TYPE_VM   = 2;
-
-
 
 	var w = window,
     d = document,
@@ -16,6 +16,8 @@
     g = d.getElementsByTagName('body')[0];
 
 	///////////////////////////////////
+
+	var save_translate, save_scale ;
 
 	var r = 200;
 	var x = d3.scale.linear().range([0, r]);
@@ -36,25 +38,42 @@
 
 	var svg = d3.select("body").append("svg")
 		.attr("object_id","svg")
-		.attr("width", "100%")
-		.attr("height","100%")
+		.attr("width", w)
+		.attr("height",h)
         .attr("viewBox", "0 0 " + w + " " + h )
-        .attr("dblclick",null)
+        .attr("pointer-events", "all")
     ;
 
 	///////////////////////////////////
 
-	svg.on("click",function () { clickdezoom() } )
+	svg
+		.on("dblclick",function () {
+			clickdezoom()
+			})
+	;
+	svg
+		.on("click",function () {
+			clickbackzoom()
+			})
 	;
 
 	svg
-		.attr("pointer-events", "all")
 		.call(d3.behavior.zoom().on("zoom", function () {
+
+			if ( activate == true) {clickdezoom();}
+
 			graph.attr(
 				"transform",
 				"translate(" + d3.event.translate + ") scale(" + d3.event.scale + ")"
+
+
 			);
+			save_translate =  d3.event.translate ;
+			save_scale =  d3.event.scale ;
+
+
 		}))
+        .on("dblclick.zoom",null)
 
 	;
 
@@ -183,6 +202,7 @@
 
 	function clickelem(d,current)
 	{
+	 	activate = true ;
 
 		if (current == No )
 		{
@@ -196,37 +216,54 @@
 			var x = (w/2-d.x*6);
 			var y = (h/2-d.y*6);
 
-				graph.transition().duration(400).attr(
+			graph.attr(
 				"transform",
 				"translate("+(x) +","+(y) +") scale(" +6+ ")"
 				);
 
-				No = current ;
+			No = current ;
 
-			node.transition().duration(400).style("fill-opacity",function (d,i) { return i == current ? 1 : 0.1; });
-			link.transition().duration(400).style("stroke-opacity",0.1);
+			node.style("fill-opacity",function (d,i) { return i == current ? 1 : 0.1; });
+			link.style("stroke-opacity",0.1);
 
-			;
+			d3.event.stopPropagation();
 
 		}
-
-		d3.event.stopPropagation();
-
 	}
 
 	function clickdezoom()
 	{
-		graph.transition().duration(400).attr(
+		activate = false ;
+
+		console.log(1);
+
+		graph.attr(
 			"transform",
 			"translate(0, 0) scale(1)"
 		);
 
-		node.transition().duration(400).style("fill-opacity",1);
-		link.transition().duration(400).style("stroke-opacity",1);
+		node.style("fill-opacity",1);
+		link.style("stroke-opacity",1);
 
 		No = 0 ;
 	}
 
+	function clickbackzoom()
+	{
+		activate = false ;
+
+		console.log(1);
+
+		graph.attr(
+				"transform",
+				"translate(" + save_translate + ") scale(" + save_scale + ")"
+		);
+
+		node.style("fill-opacity",1);
+		link.style("stroke-opacity",1);
+
+		No = 0 ;
+	}
 	////////////////////////////////////////
 
 	/* FONCTION QUI AJUSTE LE SITE AU NAVIGATEUR */
