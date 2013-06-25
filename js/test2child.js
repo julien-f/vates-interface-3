@@ -48,36 +48,35 @@
 
 	svg
 		.on("dblclick",function () {
-			clickdezoom()
+			reset_view()
 			})
 	;
 	svg
 		.on("click",function () {
-			clickbackzoom()
+			previous_view()
 			})
 	;
 
-	svg
-		.call(d3.behavior.zoom().on("zoom", function () {
+	var graph = svg.append('g');
 
-			if ( activate == true) {clickdezoom();}
+	var zoom = d3.behavior.zoom();
+
+	svg
+		.call(zoom.on("zoom", function () {
+
+			if (activate)
+			{
+				reset_view();
+			}
 
 			graph.attr(
 				"transform",
 				"translate(" + d3.event.translate + ") scale(" + d3.event.scale + ")"
-
-
 			);
-			save_translate =  d3.event.translate ;
-			save_scale =  d3.event.scale ;
-
-
+			save_translate = d3.event.translate ;
+			save_scale = d3.event.scale ;
 		}))
         .on("dblclick.zoom",null)
-
-	;
-
-	var graph = svg.append('g')
 	;
 
 	///////////////////////////
@@ -204,63 +203,63 @@
 	{
 	 	activate = true ;
 
-		if (current == No )
+		if (current == No)
 		{
-			clickdezoom();
-
+			reset_view();
 		}
-
 		else
 		{
-
 			var x = (w/2-d.x*6);
 			var y = (h/2-d.y*6);
 
-			graph.attr(
+			graph.transition().duration(400).attr(
 				"transform",
 				"translate("+(x) +","+(y) +") scale(" +6+ ")"
-				);
+			);
 
 			No = current ;
 
-			node.style("fill-opacity",function (d,i) { return i == current ? 1 : 0.1; });
-			link.style("stroke-opacity",0.1);
+			node.transition().duration(400).style("fill-opacity",function (d,i) { return i == current ? 1 : 0.1; });
+			link.transition().duration(400).style("stroke-opacity",0.1);
 
 			d3.event.stopPropagation();
 
 		}
 	}
 
-	function clickdezoom()
+	function reset_view()
 	{
 		activate = false ;
 
 		console.log(1);
 
-		graph.attr(
+		graph.transition().duration(400).attr(
 			"transform",
 			"translate(0, 0) scale(1)"
 		);
 
-		node.style("fill-opacity",1);
-		link.style("stroke-opacity",1);
+		node.transition().duration(400).style("fill-opacity",1);
+		link.transition().duration(400).style("stroke-opacity",1);
 
-		No = 0 ;
+		zoom.translate([0, 0]);
+		zoom.scale(1);
+
+		No = 0;
 	}
 
-	function clickbackzoom()
+	function previous_view()
 	{
 		activate = false ;
 
 		console.log(1);
 
-		graph.attr(
-				"transform",
-				"translate(" + save_translate + ") scale(" + save_scale + ")"
+		graph.transition().duration(400).attr(
+			"transform",
+			"translate(" + save_translate + ") scale(" + save_scale + ")"
 		);
 
-		node.style("fill-opacity",1);
-		link.style("stroke-opacity",1);
+		node.transition().duration(400).style("fill-opacity",1);
+		link.transition().duration(400).style("stroke-opacity",1);
 
 		No = 0 ;
 	}
