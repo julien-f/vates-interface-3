@@ -1,23 +1,24 @@
 !function () {
 	'use strict';
 
-	// add translation
-	var No;
 
-	var activate; // solve the problem with zoom and move.
+	var save_translate, save_scale ;	// save the position for p.
+	var No; 							// need to save past number of node.
+	var activate; 					    // solve the problem with zoom and move.
+
+	var scale_zoom = 6 ; 				// fixed scale when click on the node
 
 	var TYPE_POOL = 0;
 	var TYPE_HOST = 1;
 	var TYPE_VM   = 2;
+	///////////////////////////////////
+	// keep page propreyty.
 
 	var w = window,
     d = document,
     e = d.documentElement,
     g = d.getElementsByTagName('body')[0];
-
 	///////////////////////////////////
-
-	var save_translate, save_scale ;
 
 	var r = 200;
 	var x = d3.scale.linear().range([0, r]);
@@ -36,15 +37,15 @@
 		.size([w, h])
 	;
 
+
 	var svg = d3.select("body").append("svg")
-		.attr("object_id","svg")
-		.attr("width", w)
-		.attr("height",h)
+		.attr("width", "100%")
+		.attr("height","100%")
         .attr("viewBox", "0 0 " + w + " " + h )
         .attr("pointer-events", "all")
     ;
-
 	///////////////////////////////////
+	// SVG INTERACTIVITY
 
 	svg
 		.on("dblclick",function () {
@@ -73,14 +74,14 @@
 				"transform",
 				"translate(" + d3.event.translate + ") scale(" + d3.event.scale + ")"
 			);
+
 			save_translate = d3.event.translate ;
 			save_scale = d3.event.scale ;
+
 		}))
         .on("dblclick.zoom",null)
 	;
-
 	///////////////////////////
-
 	//Force declration
 
 	var tmp = create_nodes_and_links(data);
@@ -92,9 +93,7 @@
 
 	// Adds (hidden) virtual node at the center.
 
-		// Reacts to appropriate events.
-
-
+	// Reacts to appropriate events.
 
 	!function (nodes, links) {
 		var center = {};
@@ -126,15 +125,11 @@
 		})
 		.gravity(0.1)
 	;
-
-
 	update();
-
 	////////////////////////////////////////
 
 	function update()
 	{
-
 		force.start();
 
 		// Updates the links.
@@ -173,13 +168,12 @@
 			.attr("fill", function (d) {
 				return colors(d.type);
 			})
-			.on("click",function(d,i){ clickelem (d,i) })
+			.on("click",function(d,i){node_view (d,i) })
 		;
 
 		// Exit any old nodes.
 		node.exit().remove();
 	}
-
 	////////////////////////////////////////
 
 	function tick()
@@ -196,40 +190,35 @@
 			.attr("cy", function(d) { return d.y; })
 		;
 	}
-
 	////////////////////////////////////////
+	// POINTER EVENT FUNCTION
 
-	function clickelem(d,current)
+	function node_view (d,current)
 	{
-	 	activate = true ;
-
 		if (current == No)
 		{
-			reset_view();
+			previous_view();
 		}
 		else
 		{
-			var x = (w/2-d.x*6);
-			var y = (h/2-d.y*6);
+			var x = (w/2-d.x*scale_zoom);
+			var y = (h/2-d.y*scale_zoom);
 
 			graph.transition().duration(400).attr(
 				"transform",
-				"translate("+(x) +","+(y) +") scale(" +6+ ")"
+				"translate("+(x) +","+(y) +") scale(" +scale_zoom+ ")"
 			);
-
 			No = current ;
-
 			node.transition().duration(400).style("fill-opacity",function (d,i) { return i == current ? 1 : 0.1; });
 			link.transition().duration(400).style("stroke-opacity",0.1);
 
-			d3.event.stopPropagation();
-
+			d3.event.stopPropagation();// stop to go back in the SVG DOM.
 		}
+		activate = true ;
 	}
 
 	function reset_view()
 	{
-		activate = false ;
 
 		console.log(1);
 
@@ -243,6 +232,8 @@
 
 		zoom.translate([0, 0]);
 		zoom.scale(1);
+
+		activate = false ;
 
 		No = 0;
 	}
@@ -264,8 +255,8 @@
 		No = 0 ;
 	}
 	////////////////////////////////////////
+	// SIZE THE WINDOW AT THE BEGINING
 
-	/* FONCTION QUI AJUSTE LE SITE AU NAVIGATEUR */
 	function winDim() {
 
 		var W,H,
@@ -274,7 +265,7 @@
 			de = d.documentElement,
 			db = d.body;
 
-		if ( i.innerWidth ) { // autres que IE
+		if ( i.innerWidth ) { // other of IE
 			W = i.innerWidth;
 			H = i.innerHeight;
 
@@ -293,7 +284,6 @@
 
 
 		}
-
 	////////////////////////////////////////
 
 	function create_nodes_and_links(pools)
