@@ -2,7 +2,8 @@
 	'use strict';
 
 
-	var save_translate, save_scale ;	// save the position for p.
+	var save_translate = 0 ;
+	var save_scale = 1 ;	// save the position for p.
 	var No; 							// need to save past number of node.
 	var activate; 					    // solve the problem with zoom and move.
 
@@ -44,6 +45,7 @@
         .attr("viewBox", "0 0 " + w + " " + h )
         .attr("pointer-events", "all")
     ;
+
 	///////////////////////////////////
 	// SVG INTERACTIVITY
 
@@ -209,7 +211,22 @@
 				"translate("+(x) +","+(y) +") scale(" +scale_zoom+ ")"
 			);
 			No = current ;
-			node.transition().duration(400).style("fill-opacity",function (d,i) { return i == current ? 1 : 0.1; });
+
+			node.transition().duration(400).style("fill", function (d, i) {
+				if (current === i)
+				{
+					return null;
+				}
+				var old = d3.rgb(d3.select(this).attr("fill"));
+				var bg = d3.rgb('white');
+
+				return d3.rgb(
+					old.r * 0.1 + bg.r * 0.9,
+					old.g * 0.1 + bg.g * 0.9,
+					old.b * 0.1 + bg.b * 0.9
+				).toString();
+			});
+
 			link.transition().duration(400).style("stroke-opacity",0.1);
 
 			d3.event.stopPropagation();// stop to go back in the SVG DOM.
@@ -219,15 +236,12 @@
 
 	function reset_view()
 	{
-
-		console.log(1);
-
 		graph.transition().duration(400).attr(
 			"transform",
-			"translate(0, 0) scale(1)"
+			"translate(0,0) scale(1)"
 		);
 
-		node.transition().duration(400).style("fill-opacity",1);
+		node.transition().duration(400).style("fill", null)
 		link.transition().duration(400).style("stroke-opacity",1);
 
 		zoom.translate([0, 0]);
@@ -242,14 +256,13 @@
 	{
 		activate = false ;
 
-		console.log(1);
-
 		graph.transition().duration(400).attr(
 			"transform",
 			"translate(" + save_translate + ") scale(" + save_scale + ")"
 		);
 
-		node.transition().duration(400).style("fill-opacity",1);
+
+		node.transition().duration(400).style("fill", null)
 		link.transition().duration(400).style("stroke-opacity",1);
 
 		No = 0 ;
@@ -283,7 +296,7 @@
 		return {w:W,h:H} ;
 
 
-		}
+	}
 	////////////////////////////////////////
 
 	function create_nodes_and_links(pools)
