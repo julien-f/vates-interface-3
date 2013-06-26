@@ -9,12 +9,16 @@
 			border: 1px solid gray
 		}
 
-		circle:hover {
-			fill: rgb(120,120,120);
+		text {
+			display: none
 		}
 
-		.links > line {
-			stroke: black;
+		g.node:hover circle, g.selected circle {
+			stroke: black
+		}
+
+		g.node:hover text, g.selected text {
+			display: block
 		}
 	</style>
 </head>

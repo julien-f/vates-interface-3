@@ -7,7 +7,7 @@
 	var No; 							// need to save past number of node.
 	var activate; 					    // solve the problem with zoom and move.
 
-	var scale_zoom = 6 ; 				// fixed scale when click on the node
+	var scale_zoom = 5 ; 				// fixed scale when click on the node
 
 	var TYPE_POOL = 0;
 	var TYPE_HOST = 1;
@@ -49,16 +49,8 @@
 	///////////////////////////////////
 	// SVG INTERACTIVITY
 
-	svg
-		.on("dblclick",function () {
-			reset_view()
-			})
-	;
-	svg
-		.on("click",function () {
-			previous_view()
-			})
-	;
+	svg.on("dblclick", reset_view);
+	svg.on("click", previous_view);
 
 	var graph = svg.append('g');
 
@@ -143,16 +135,27 @@
 
 		// Enter any new links.
 		link.enter().insert("line", ".link")
-			.attr("class", "link")
+
 			.attr("x1", function(d) { return d.source.x; })
 			.attr("y1", function(d) { return d.source.y; })
 			.attr("x2", function(d) { return d.target.x; })
 			.attr("y2", function(d) { return d.target.y; })
 			.attr('stroke', 'black')
+			.classed("link")
 		;
 
 		// Exit any old links.
 		link.exit().remove();
+
+
+		// Marche à suivre :
+		// 1. Sélectionner les nodes (groupes avec la classe "node") existants.
+		// 2. Pour les nodes manquants (sélection "enter") :
+		//    1. Créer un groupe avec la classe "node".
+		//    2. Créer le circle avec la bonne couleur.
+		//    3. Créer le texte avec le label.
+		// 3. Pour les nodes en trop (sélection "exit") : les supprimer.
+		// 4. Pour tous les nodes existants : mettre à jour leur coordonnées (attribut "transform").
 
 		// Update the nodes.
 		node = graph.selectAll(".node")
@@ -161,16 +164,25 @@
 			})
 		;
 
-		// Enter any new nodes.
-		node.enter().append("circle")
-			.attr("class", "node")
-			.attr("cx", function(d, i) { return d.x; })
-			.attr("cy", function(d) { return d.y; })
+		//create groups for each node
+		var new_node  = node.enter()
+			.append("g")
+			.classed("node",true);
+
+
+		new_node
+			.append("circle")
 			.attr("r", 15)
 			.attr("fill", function (d) {
 				return colors(d.type);
 			})
-			.on("click",function(d,i){node_view (d,i) })
+			.on("click", node_view)
+		;
+
+
+		new_node.append("text")
+			.text(function(d) { return d.label})
+			.on("click", node_view)
 		;
 
 		// Exit any old nodes.
@@ -188,8 +200,13 @@
 		;
 
 		node
-			.attr("cx", function(d) { return d.x; })
-			.attr("cy", function(d) { return d.y; })
+			.attr(
+				"transform",
+				function (d, i) {
+					return "translate("+ d.x +","+ d.y +")";
+				}
+			);
+		;
 		;
 	}
 	////////////////////////////////////////
@@ -203,6 +220,10 @@
 		}
 		else
 		{
+			node.classed("selected", function (d, i) {
+				return (i === current);
+			});
+
 			var x = (w/2-d.x*scale_zoom);
 			var y = (h/2-d.y*scale_zoom);
 
@@ -212,7 +233,7 @@
 			);
 			No = current ;
 
-			node.transition().duration(400).style("fill", function (d, i) {
+			node.select("circle").transition().duration(400).style("fill", function (d, i) {
 				if (current === i)
 				{
 					return null;
@@ -236,12 +257,14 @@
 
 	function reset_view()
 	{
+		node.classed("selected", false);
+
 		graph.transition().duration(400).attr(
 			"transform",
 			"translate(0,0) scale(1)"
 		);
 
-		node.transition().duration(400).style("fill", null)
+		node.select("circle").transition().duration(400).style("fill", null)
 		link.transition().duration(400).style("stroke-opacity",1);
 
 		zoom.translate([0, 0]);
@@ -256,13 +279,15 @@
 	{
 		activate = false ;
 
+		node.classed("selected", false);
+
 		graph.transition().duration(400).attr(
 			"transform",
 			"translate(" + save_translate + ") scale(" + save_scale + ")"
 		);
 
 
-		node.transition().duration(400).style("fill", null)
+		node.select("circle").transition().duration(400).style("fill", null)
 		link.transition().duration(400).style("stroke-opacity",1);
 
 		No = 0 ;
