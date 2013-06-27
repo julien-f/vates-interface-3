@@ -19,6 +19,10 @@ var data = [
 					{ "label": "VM 3" },
 					{ "label": "VM 4" },
 					{ "label": "VM 5" },
+					{ "label": "VM 6" },
+					{ "label": "VM 7" },
+					{ "label": "VM 8" },
+
 				]
 			},
 			{
@@ -101,4 +105,35 @@ var data = [
 			},
 		]
 	},
+	{
+		"label": "Pool 6",
+		"hosts": [
+			{
+				"label": "Host 1",
+				"vms": [
+					{ "label": "VM 1" },
+					{ "label": "VM 2" },
+					{ "label": "VM 3" },
+					{ "label": "VM 4" },
+					{ "label": "VM 5" },
+				]
+			},
+		]
+	},
+	{
+		"label": "Pool 7",
+		"hosts": [
+			{
+				"label": "Host 1",
+				"vms": [
+					{ "label": "VM 1" },
+					{ "label": "VM 2" },
+					{ "label": "VM 3" },
+					{ "label": "VM 4" },
+					{ "label": "VM 5" },
+				]
+			},
+		]
+	},
+
 ];
