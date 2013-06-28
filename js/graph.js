@@ -6,6 +6,11 @@ function molecule_graph(graph, data)
 {
 	'use strict';
 
+
+	// resize coeff
+	var coeffic = 0.25;
+	var transcoeff = - (coeffic  * 100 )
+
 	//--------------------------------------
 
 	graph = graph.append('g')
@@ -41,13 +46,13 @@ function molecule_graph(graph, data)
 	//--------------------------------------
 
 	var group = graph.append('g')
-		.attr('transform', 'translate(-100, -100)') // Initial translation.
+		.attr('transform', 'translate('+transcoeff+','+transcoeff+') scale('+coeffic+')') // Initial translation.
 	;
 
 	//--------------------------------------
 
 	var zoomer = d3.behavior.zoom()
-		.translate([-100, -100]) // Initial translation.
+		.translate([-100, -100]).scale(coeffic) // Initial translation.
 		.on('zoom', function () {
 			var e = d3.event;
 
@@ -72,21 +77,27 @@ function molecule_graph(graph, data)
 
 	//======================================
 
+
+	//force propriety
+	var charge = -500 ;
+	var gravity = 0.1  ;
+	var linkdistance = 75 ;
+
 	var TYPE_POOL = 0;
 	var TYPE_HOST = 1;
 	var TYPE_VM   = 2;
 
 	// Pools to center distance.
-	var pool_distance = 10;
+	var pool_distance = 100 ;
 
 	// Hosts to pools distance.
-	var host_distance = 10;
+	var host_distance = 100 ;
 
 	// VMs to hosts distance.
-	var vm_distance = 10;
+	var vm_distance = 100 ;
 
 	// Node radius (can be a function).
-	var node_radius = 4;
+	var node_radius = 15 ;
 
 	// Node color (can be a function).
 	var node_color = function (node) {
@@ -109,11 +120,11 @@ function molecule_graph(graph, data)
 
 	var force = d3.layout.force()
 		.size([200, 200])
-		.charge(-40)
+		.charge(charge)
 		.linkDistance(function (link) {
-			return link.distance || 10;
+			return link.distance || linkdistance;
 		})
-		.gravity(0.6)
+		.gravity(gravity)
 		.on('tick', function () {
 			node.attr(
 				'transform',
@@ -270,16 +281,16 @@ function molecule_graph(graph, data)
 		var radius = pool_distance + host_distance;
 		_.each(hosts, function (host, i) {
 			var alpha_i = alpha * i;
-			host.x = Math.cos(alpha_i) + radius + mid_w;
-			host.y = Math.sin(alpha_i) + radius + mid_h;
+			host.x = Math.cos(alpha_i) * radius + mid_w;
+			host.y = Math.sin(alpha_i) * radius + mid_h;
 		});
 
 		var alpha = TWO_PI / vms.length;
 		var radius = pool_distance + host_distance + vm_distance;
 		_.each(vms, function (vm, i) {
 			var alpha_i = alpha * i;
-			vm.x = Math.cos(alpha_i) + radius + mid_w;
-			vm.y = Math.sin(alpha_i) + radius + mid_h;
+			vm.x = Math.cos(alpha_i) * radius + mid_w;
+			vm.y = Math.sin(alpha_i) * radius + mid_h;
 		});
 
 		return [
@@ -391,8 +402,9 @@ function molecule_graph(graph, data)
 !function () {
 	'use strict';
 
-	var width = 500;
-	var height = 500;
+	var width = 1500;
+	var height =1000;
+	var coeff = 1;
 
 	var svg = d3.select('body').append('svg')
 		.attr('width', width)
@@ -402,10 +414,41 @@ function molecule_graph(graph, data)
 	var graph = svg.append('g')
 		.attr(
 			'transform',
-			'translate('+ width/2 +','+ height/2 +') scale('+ width/200 +')'
+			'translate('+ 100+','+100+') scale('+ coeff+')'
 		)
 	;
 
 	// Dessine le graphe dans l'élément graph.
-	molecule_graph(graph, data);
+	 molecule_graph(graph, data);
+
+	var coeff = 1 ;
+
+	var graph2 = svg.append('g')
+		.attr(
+			'transform',
+			'translate('+ 100+','+ 300+') scale('+ coeff+')'
+		)
+	;
+	pie_graph_HOST_RAM(graph2, data);
+
+		var coeff = 1 ;
+
+	var graph3 = svg.append('g')
+		.attr(
+			'transform',
+			'translate('+ 200*coeff+','+ 500*coeff +') scale('+ coeff+')'
+		)
+	;
+	pie_graph_HOST_RAM(graph3, data);
+
+		var coeff = 1 ;
+
+	var graph4 = svg.append('g')
+		.attr(
+			'transform',
+			'translate('+ 200*coeff+','+ 200*coeff +') scale('+ coeff+')'
+		)
+	;
+	pie_graph_HOST_RAM(graph4, data);
+
 }();
