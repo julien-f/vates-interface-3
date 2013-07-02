@@ -1,17 +1,12 @@
-List of movement can do on the graph.
+List of possible movements on the graph.
 
+- Mouse over a node: the name of the node is shown and a border around it is drawn.
+- Click on a unselected node: select the node (zoom).
+- Click on a selected node: go back to the previous view.
+- Double-click on a node: select and unselect the node (@todo unwanted behavior).
 
--
+- Click on the background: go back to the previous view.
+- Double-click on the background: reset the view.
 
--Click / Autre qu'une cercle -> retour à la position précedente
--Click / Node -> zoom sur la node une 2 eme fois sur la node et retour à la position précedente.
--DoubleClick						Autre qu'une cercle		retour position de base
--DoubleClick						Node					actionne un zoom et un dezoom sur la node
--click maintenus + mouvement		N'importe oû		    déplacement du graphe
--Molette souris		            N'importe oû			Zoom oû le pointeur est présent
--Survole avec pointeur		    Node	                rend la node gris-bleue
-
--ACTION MELANGER:
--Click / node + zoom				Node					retour position de base
--lick / node +déplacement		Node					retour position de base
-
+- Mouse down, mouve and mouse up: move the current view, go back to previous view if a node is selected.
+- Mouse wheel: zoom and unzoom the current view, go back to previous view if a node is selected.
