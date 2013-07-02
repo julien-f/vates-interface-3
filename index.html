@@ -9,15 +9,15 @@
 			border: 1px solid gray
 		}
 
-		text {
+		#molecule-graph text {
 			display: none
 		}
 
-		g.node:hover circle, g.selected circle {
+		#molecule-graph g.node:hover circle, #molecule-graph g.selected circle {
 			stroke: black
 		}
 
-		g.node:hover text, g.selected text {
+		#molecule-graph g.node:hover text, #molecule-graph g.selected text {
 			display: block
 		}
 	</style>
@@ -27,6 +27,7 @@
 	<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 	<script src="js/data.js"></script>
 	<script src="js/pie.js"></script>
+	<script src="js/molecule_graph.js"></script>
 	<script src="js/graph.js"></script>
 </body>
 </html>

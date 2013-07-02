@@ -1,35 +1,21 @@
-function pie_graph_HOST_RAM (graph,data) {
+function pie_graph(graph,data) {
 	'use strict';
 
-		var vms = ["10","20","30","40"] // DATA
-
+	// DATA
+	var vms = [
+		{"label" : "VM 1","RAM" : "5"},
+		{"label" : "VM 2","RAM" : "5"},
+		{"label" : "VM 3","RAM" : "10"},
+		{"label" : "VM 1","RAM" : "5"},
+		{"label" : "VM 2","RAM" : "5"},
+		{"label" : "VM 3","RAM" : "10"},
+		{"label" : "VM 4","RAM" : "10"}
+		]
 	//--------------------------------------
 
-	// resize coeff
-	var coeffic = 1;
-	var transcoeff = - (coeffic  * 100 )
+	var color = d3.scale.category20();
 
 	//--------------------------------------
-
-	graph = graph.append('g')
-		.attr('pointer-events', 'all')
-
-		// @todo Not sure it is very clean to use a nested element as
-		// a clip path.
-		.attr('clip-path', 'url(#molecule-graph-area)')
-	;
-
-	//--------------------------------------
-
-	// Clipping element.
-	graph.append('defs').append('clipPath')
-		.attr('id', 'molecule-graph-area')
-		.append('rect')
-			.attr('x', -100)
-			.attr('y', -100)
-			.attr('width', 200)
-			.attr('height', 200)
-	;
 
 	// Background element which allows us to get pointer events.
 	var area = graph.append('rect')
@@ -37,7 +23,6 @@ function pie_graph_HOST_RAM (graph,data) {
 		.attr('y', -100)
 		.attr('width', 200)
 		.attr('height', 200)
-		.style("fill-opacity","0.2")
 		.attr('fill', 'white')
 		.attr('stroke', 'black')
 	;
@@ -45,33 +30,81 @@ function pie_graph_HOST_RAM (graph,data) {
 	//--------------------------------------
 
 	var group = graph.append('g')
-		.attr('transform','scale('+coeffic+')') // Initial translation.
 	;
 
 	//--------------------------------------
 
 
-	var color = ["blue", "red", "purple", "orange", "green"];
 
+
+	//--------------------------------------
 
 	var arc = d3.svg.arc() //Constructs a new arc generator
-    	.outerRadius(100)
-    	.innerRadius(50);
+    	.outerRadius(90)
+    	.innerRadius(50)
+    ;
 
     var pie = d3.layout.pie()
-    		.startAngle(1.5*Math.PI/2)
-    		.endAngle(-1.5*Math.PI/2)
-   			.sort(null)
-   	 		.value(function(d) { return d});
+		.startAngle(0)
+		.endAngle(-Math.PI)
+		.sort(null)
+		.value(function(d) { return d.RAM})
+	;
 
 	var	donuts = group.selectAll(".path").data(pie(vms))
-				.enter().append("g")
-				.attr("class","arc")
-				;
+		.enter().append("g")
+		.attr("class","arc")
+	;
 
-		donuts.append("path")
-			.attr("d", arc)
-			.style("fill",function (d,i) {return color[i] });
+	donuts.append("path")
+		.attr("d", arc)
+		.style("fill",function (d,i) {return color(i) })
+	;
 
+
+	donuts
+		.append("text")
+		.attr("transform", function(d,i) { return "translate(" + arc.centroid(d) + ")"; })
+		.style("font-size","0.7em")
+		.attr("dx", -12)
+		.text(function (d,i) {return vms[i].RAM +"%" })
+	;
+
+	//--------------------------------------
+
+	function legend(i)
+	{
+		return [40, (-50+(100/vms.length) * i ) ] ;
+	}
+
+	//--------------------------------------
+
+    var rect = group.selectAll(".legend")
+    	.data(vms)
+		.enter().append("g")
+		.attr("class","legend")
+		.attr('transform', function (pool, i) {
+			return ('translate('+ legend(i).join(',') +')');
+		})
+		;
+
+	rect
+		.append("rect")
+		.attr('width', 10)
+		.attr('height', 10)
+		.style("fill",function (d,i) {return color(i) })
+		.attr('stroke', 'black')
+		.attr('stroke-width',0.2)
+	;
+
+	rect
+		.append("text")
+		.attr("dx",12)
+		.attr("dy",6)
+		.style("font-size","0.7em")
+		.style("dominant-baseline","middle")
+
+		.text(function(d) { return d.label; })
+	;
 
 };
