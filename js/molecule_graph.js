@@ -1,3 +1,6 @@
+/* jshint es5:true */
+/* global d3, pie_graph, polygon, _ */
+
 /**
  * Fonction qui dessine le graphe centré en (0, 0) et s'étendant de
  * [-100, 100] en x et en y.
@@ -9,8 +12,8 @@ function molecule_graph(graph, data, width)
 	//--------------------------------------
 
 	// resize coeff
-	var coeffic =0.25; 					// one on the scale in graph.js
-	var transcoeff = -(coeffic  * 100 );	// initial state is -100 / -100 needed to be multiplicate by the coeff
+	var coeffic =0.25; // one on the scale in graph.js
+	var transcoeff = -(coeffic  * 100 ); // initial state is -100 / -100 needed to be multiplicate by the coeff
 
 	//--------------------------------------
 
@@ -34,15 +37,13 @@ function molecule_graph(graph, data, width)
 	;
 
 	// Background element which allows us to get pointer events.
-	var area = graph.append('rect')
+	/* var area = */graph.append('rect')
 		.attr('x', -width/2)
 		.attr('y', -100)
 		.attr('width', width)
 		.attr('height', 200)
 		.attr('fill', 'white')
 	;
-
-
 
 	//-------------------------------------
 
@@ -58,7 +59,7 @@ function molecule_graph(graph, data, width)
 		.on('zoom', function () {
 			var e = d3.event;
 
-			if (last_id != -1)
+			if (-1 !== last_id)
 			{
 				previous_view();
 			}
@@ -138,27 +139,27 @@ function molecule_graph(graph, data, width)
 			pool_node.attr(
 				'transform',
 				function (d) {
-					return "translate("+ d.x +","+ d.y +")";
+					return 'translate('+ d.x +','+ d.y +')';
 				}
 			);
 			host_node.attr(
 				'transform',
 				function (d) {
-					return "translate("+ (d.x)+","+ (d.y) +")";
+					return 'translate('+ (d.x)+','+ (d.y) +')';
 				}
 			);
 			vm_node.attr(
 				'transform',
 				function (d) {
-					return "translate("+ (d.x) +","+ (d.y) +")";
+					return 'translate('+ (d.x) +','+ (d.y) +')';
 				}
 			);
 
 			link
-				.attr("x1", function(d) { return d.source.x; })
-				.attr("y1", function(d) { return d.source.y; })
-				.attr("x2", function(d) { return d.target.x; })
-				.attr("y2", function(d) { return d.target.y; })
+				.attr('x1', function(d) { return d.source.x; })
+				.attr('y1', function(d) { return d.source.y; })
+				.attr('x2', function(d) { return d.target.x; })
+				.attr('y2', function(d) { return d.target.y; })
 			;
 		})
 	;
@@ -215,10 +216,10 @@ function molecule_graph(graph, data, width)
 
 		//------------------
 
-		node = group.append("g").attr('class', '.node')
+		node = group.append('g').attr('class', '.node')
 		;
 
-		pool_node = node.selectAll(".pool").data(tmp[0],function(d,i) {
+		pool_node = node.selectAll('.pool').data(tmp[0],function(d) {
 				return d.id;
 
 			})
@@ -227,9 +228,9 @@ function molecule_graph(graph, data, width)
 			.attr('class', 'pool')
 			.on('click', select_node)
 			.attr(
-				"transform",
-				function (d, i) {
-					return "translate("+ d.x +","+ d.y +")";
+				'transform',
+				function (d) {
+					return 'translate('+ d.x +','+ d.y +')';
 				}
 			)
 		;
@@ -247,13 +248,13 @@ function molecule_graph(graph, data, width)
 			})
 		;
 
-		node.selectAll(".pool").data(tmp[0],function(d,i) {
+		node.selectAll('.pool').data(tmp[0],function(d,i) {
 				return i;
 			}).exit().remove();
 
 		//------------------
 
-		 host_node = node.selectAll(".host").data(tmp[1],function(d,i){
+		 host_node = node.selectAll('.host').data(tmp[1],function(d){
 				return d.id;
 
 			})
@@ -262,7 +263,7 @@ function molecule_graph(graph, data, width)
 			.on('click', select_node)
 		;
 
-		polygon(host_node,4,15).attr("fill", node_color);
+		polygon(host_node,4,15).attr('fill', node_color);
 
 		// @todo Shift position.
 		host_node.append('text')
@@ -271,7 +272,7 @@ function molecule_graph(graph, data, width)
 			})
 		;
 
-		node.selectAll(".host").data(tmp[1],function(d,i){
+		node.selectAll('.host').data(tmp[1],function(d,i){
 				return i;
 
 		}).exit().remove();
@@ -279,7 +280,7 @@ function molecule_graph(graph, data, width)
 		//------------------
 
 
-		 vm_node = node.selectAll(".vm").data(tmp[2],function(d,i){
+		 vm_node = node.selectAll('.vm').data(tmp[2],function(d){
 				return d.id;
 
 			})
@@ -289,7 +290,7 @@ function molecule_graph(graph, data, width)
 
 		;
 
-		polygon(vm_node,3,15).attr("fill", node_color);
+		polygon(vm_node,3,15).attr('fill', node_color);
 
 		// @todo Shift position.
 		vm_node.append('text')
@@ -298,7 +299,7 @@ function molecule_graph(graph, data, width)
 			})
 		;
 
-		node.selectAll(".vm").data(tmp[2],function(d,i){
+		node.selectAll('.vm').data(tmp[2],function(d,i){
 			return i;
 		}).exit().remove();
 	}
@@ -370,16 +371,16 @@ function molecule_graph(graph, data, width)
 			pool.fixed = true;  // fixed the position of poom.
 		});
 
-		var alpha = TWO_PI / hosts.length;
-		var radius = pool_distance + host_distance;
+		alpha = TWO_PI / hosts.length;
+		radius = pool_distance + host_distance;
 		_.each(hosts, function (host, i) {
 			var alpha_i = alpha * i;
 			host.x = Math.cos(alpha_i) * radius + mid_w;
 			host.y = Math.sin(alpha_i) * radius + mid_h;
 		});
 
-		var alpha = TWO_PI / vms.length;
-		var radius = pool_distance + host_distance + vm_distance;
+		alpha = TWO_PI / vms.length;
+		radius = pool_distance + host_distance + vm_distance;
 		_.each(vms, function (vm, i) {
 			var alpha_i = alpha * i;
 			vm.x = Math.cos(alpha_i) * radius + mid_w;
@@ -396,6 +397,8 @@ function molecule_graph(graph, data, width)
 
 	function select_node(d)
 	{
+		/* jshint validthis:true */
+
 		if (d.id === last_id)
 		{
 			previous_view();
@@ -412,7 +415,7 @@ function molecule_graph(graph, data, width)
 		d3.select(this).classed('selected', true);
 
 		// @todo Fade any other links and node.
-		pool_node.select('circle').transition().duration(duration).style('fill', function (d, i) {
+		pool_node.select('circle').transition().duration(duration).style('fill', function (d) {
 			if (last_id === d.id )
 			{
 				return null;
@@ -427,7 +430,7 @@ function molecule_graph(graph, data, width)
 			).toString();
 		});
 
-		host_node.select('path').transition().duration(duration).style('fill', function (d, i) {
+		host_node.select('path').transition().duration(duration).style('fill', function (d) {
 			if (last_id === d.id )
 			{
 				return null;
@@ -442,7 +445,7 @@ function molecule_graph(graph, data, width)
 			).toString();
 		});
 
-		vm_node.select('path').transition().duration(duration).style('fill', function (d, i) {
+		vm_node.select('path').transition().duration(duration).style('fill', function (d) {
 			if (last_id === d.id )
 			{
 				return null;
@@ -478,8 +481,8 @@ function molecule_graph(graph, data, width)
 
 		var coeff = 0.3;
 
-		var graphpie = graph.append("g")
-		.attr("class","pie")
+		var graphpie = graph.append('g')
+		.attr('class','pie')
 		.attr(
 				'transform',
 				'translate('+ (-width/2+100*coeff) +','+ (-100+100*coeff) +') scale('+coeff+')'
@@ -488,8 +491,6 @@ function molecule_graph(graph, data, width)
 
 		//call pie graph to ram visualisation.
 		pie_graph(graphpie,data);
-
-
 	}
 
 	//--------------------------------------
@@ -499,11 +500,11 @@ function molecule_graph(graph, data, width)
 				last_id = -1;
 
 
-		d3.selectAll(".pool").classed('selected', false);
+		d3.selectAll('.pool').classed('selected', false);
 
-		d3.selectAll(".path").classed('selected', false);
+		d3.selectAll('.path').classed('selected', false);
 
-		d3.selectAll(".path").classed('selected', false);
+		d3.selectAll('.path').classed('selected', false);
 
 		pool_node.select('circle').transition().duration(duration).style('fill', function() {
 			return d3.select(this).attr('fill');
@@ -521,12 +522,12 @@ function molecule_graph(graph, data, width)
 			'translate('+transcoeff+','+transcoeff+') scale('+coeffic+')'
 		);
 
-		zoomer.translate([-100*coeffic, -100*coeffic])
+		zoomer.translate([-100*coeffic, -100*coeffic]);
 		zoomer.scale(coeffic);
 
 		//--------------------------------------
 		//delete pie graph
-		graph.selectAll(".pie").remove();
+		graph.selectAll('.pie').remove();
 	}
 
 	//--------------------------------------
@@ -538,11 +539,11 @@ function molecule_graph(graph, data, width)
 
 		// @todo Mutualize.
 
-		d3.selectAll(".pool").classed('selected', false);
+		d3.selectAll('.pool').classed('selected', false);
 
-		d3.selectAll(".path").classed('selected', false);
+		d3.selectAll('.path').classed('selected', false);
 
-		d3.selectAll(".path").classed('selected', false);
+		d3.selectAll('.path').classed('selected', false);
 
 		pool_node.select('circle').transition().duration(duration).style('fill', function() {
 			return d3.select(this).attr('fill');
@@ -563,6 +564,6 @@ function molecule_graph(graph, data, width)
 
 		//--------------------------------------
 		//delete pie graph
-		graph.selectAll(".pie").remove();
+		graph.selectAll('.pie').remove();
 	}
 }

@@ -1,6 +1,7 @@
+/* exported polygon */
 function polygon(object, nb_edges,radius)
 {
-	'use strict'
+	'use strict';
 
 	var coords = [];
 	var angle = 2 * Math.PI/nb_edges;
@@ -15,6 +16,6 @@ function polygon(object, nb_edges,radius)
 		);
 	}
 
-	return object.append("path")
-		.attr("d","M"+coords.join(" ") +"z");
-};
+	return object.append('path')
+		.attr('d','M'+ coords.join(' ') +'Z');
+}
