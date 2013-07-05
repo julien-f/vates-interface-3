@@ -427,7 +427,7 @@ function molecule_graph(graph, data, width)
 			).toString();
 		});
 
-		host_node.select('rect').transition().duration(duration).style('fill', function (d, i) {
+		host_node.select('path').transition().duration(duration).style('fill', function (d, i) {
 			if (last_id === d.id )
 			{
 				return null;
@@ -501,14 +501,14 @@ function molecule_graph(graph, data, width)
 
 		d3.selectAll(".pool").classed('selected', false);
 
-		d3.selectAll(".rect").classed('selected', false);
+		d3.selectAll(".path").classed('selected', false);
 
 		d3.selectAll(".path").classed('selected', false);
 
 		pool_node.select('circle').transition().duration(duration).style('fill', function() {
 			return d3.select(this).attr('fill');
 		});
-		host_node.select('rect').transition().duration(duration).style('fill', function() {
+		host_node.select('path').transition().duration(duration).style('fill', function() {
 			return d3.select(this).attr('fill');
 		});
 		vm_node.select('path').transition().duration(duration).style('fill', function() {
@@ -540,14 +540,14 @@ function molecule_graph(graph, data, width)
 
 		d3.selectAll(".pool").classed('selected', false);
 
-		d3.selectAll(".rect").classed('selected', false);
+		d3.selectAll(".path").classed('selected', false);
 
 		d3.selectAll(".path").classed('selected', false);
 
 		pool_node.select('circle').transition().duration(duration).style('fill', function() {
 			return d3.select(this).attr('fill');
 		});
-		host_node.select('rect').transition().duration(duration).style('fill', function() {
+		host_node.select('path').transition().duration(duration).style('fill', function() {
 			return d3.select(this).attr('fill');
 		});
 		vm_node.select('path').transition().duration(duration).style('fill', function() {
