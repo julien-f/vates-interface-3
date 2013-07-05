@@ -13,11 +13,11 @@
 			display: none
 		}
 
-		#molecule-graph g.node:hover circle, #molecule-graph g.selected circle {
+		#molecule-graph g.node.pool:hover circle, #molecule-graph g.selected circle, {
 			stroke: black
 		}
 
-		#molecule-graph g.node:hover text, #molecule-graph g.selected text {
+		#molecule-graph g.pool:hover text, #molecule-graph g.selected text, {
 			display: block
 		}
 	</style>
@@ -25,6 +25,7 @@
 <body>
 	<script src="http://underscorejs.org/underscore.js"></script>
 	<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+	<script src="js/util.js"></script>
 	<script src="js/data.js"></script>
 	<script src="js/pie.js"></script>
 	<script src="js/molecule_graph.js"></script>

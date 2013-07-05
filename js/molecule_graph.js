@@ -6,7 +6,7 @@ function molecule_graph(graph, data, width)
 {
 	'use strict';
 
-	var current_node = null;
+	//--------------------------------------
 
 	// resize coeff
 	var coeffic =0.25; 					// one on the scale in graph.js
@@ -58,7 +58,7 @@ function molecule_graph(graph, data, width)
 		.on('zoom', function () {
 			var e = d3.event;
 
-			if (current_node)
+			if (last_id != -1)
 			{
 				previous_view();
 			}
@@ -82,6 +82,8 @@ function molecule_graph(graph, data, width)
 
 	//======================================
 
+	// last id who take for select
+	var last_id = -1 ;
 
 	//force propriety
 	var charge = -500 ;
@@ -117,6 +119,10 @@ function molecule_graph(graph, data, width)
 
 	// @todo
 	var node;
+	var pool_node;
+	var host_node;
+	var vm_node;
+
 	var link;
 
 	//--------------------------------------
@@ -129,10 +135,22 @@ function molecule_graph(graph, data, width)
 		})
 		.gravity(gravity)
 		.on('tick', function () {
-			node.attr(
+			pool_node.attr(
 				'transform',
 				function (d) {
 					return "translate("+ d.x +","+ d.y +")";
+				}
+			);
+			host_node.attr(
+				'transform',
+				function (d) {
+					return "translate("+ (d.x)+","+ (d.y) +")";
+				}
+			);
+			vm_node.attr(
+				'transform',
+				function (d) {
+					return "translate("+ (d.x) +","+ (d.y) +")";
 				}
 			);
 
@@ -153,8 +171,10 @@ function molecule_graph(graph, data, width)
 	{
 		// @todo Find a way to remove “tmp”.
 		var tmp = create_nodes_and_links(data);
-		var nodes = tmp[0];
-		var links = tmp[1];
+
+		var nodes = tmp[0].concat(tmp[1],tmp[2]);
+
+		var links = tmp[3];
 
 		// Creates a virtual node at the center.
 		!function (nodes, links) {
@@ -195,13 +215,16 @@ function molecule_graph(graph, data, width)
 
 		//------------------
 
-		node = group.selectAll('.node').data(nodes, function (link, i) {
-			// @todo
-			return i;
-		});
+		node = group.append("g").attr('class', '.node')
+		;
 
-		var new_node = node.enter().append('g')
-			.attr('class', 'node')
+		pool_node = node.selectAll(".pool").data(tmp[0],function(d,i) {
+				return d.id;
+
+			})
+			.enter()
+			.append('g')
+			.attr('class', 'pool')
 			.on('click', select_node)
 			.attr(
 				"transform",
@@ -211,20 +234,75 @@ function molecule_graph(graph, data, width)
 			)
 		;
 
-		new_node.append('circle')
+		pool_node.append('circle')
 			.attr('r', node_radius)
 			.attr('fill', node_color)
 		;
 
+
 		// @todo Shift position.
-		new_node.append('text')
+		pool_node.append('text')
 			.text(function (d) {
 				return d.label;
 			})
 		;
 
-		node.exit().remove();
+		node.selectAll(".pool").data(tmp[0],function(d,i) {
+				return i;
+			}).exit().remove();
+
+		//------------------
+
+		 host_node = node.selectAll(".host").data(tmp[1],function(d,i){
+				return d.id;
+
+			})
+			.enter().append('g')
+			.attr('class', 'host')
+			.on('click', select_node)
+		;
+
+		polygon(host_node,4,15).attr("fill", node_color);
+
+		// @todo Shift position.
+		host_node.append('text')
+			.text(function (d) {
+				return d.label;
+			})
+		;
+
+		node.selectAll(".host").data(tmp[1],function(d,i){
+				return i;
+
+		}).exit().remove();
+
+		//------------------
+
+
+		 vm_node = node.selectAll(".vm").data(tmp[2],function(d,i){
+				return d.id;
+
+			})
+			.enter().append('g')
+			.attr('class', 'vm')
+			.on('click', select_node)
+
+		;
+
+		polygon(vm_node,3,15).attr("fill", node_color);
+
+		// @todo Shift position.
+		vm_node.append('text')
+			.text(function (d) {
+				return d.label;
+			})
+		;
+
+		node.selectAll(".vm").data(tmp[2],function(d,i){
+			return i;
+		}).exit().remove();
 	}
+
 
 	//--------------------------------------
 
@@ -235,15 +313,21 @@ function molecule_graph(graph, data, width)
 		var hosts = [];
 		var vms   = [];
 
+		var save_id = 0;
+
 		// Finds all nested hosts and VMs, defines their “type”
 		// attribute and creates links to their parent.
 		_.each(pools, function (pool) {
 			pool.type = TYPE_POOL;
+			pool.id = save_id ;
+			save_id = save_id + 1 ;
 
-			_.each(pool.hosts, function (host) {
+			_.each(pool.hosts, function (host,i) {
 				hosts.push(host);
 
 				host.type = TYPE_HOST;
+				host.id = save_id ;
+				save_id = save_id + 1 ;
 
 				links.push({
 					'source': host,
@@ -251,10 +335,14 @@ function molecule_graph(graph, data, width)
 					'distance': host_distance,
 				});
 
-				_.each(host.vms, function (vm) {
+				_.each(host.vms, function (vm,i) {
 					vms.push(vm);
 
+
 					vm.type = TYPE_VM;
+					vm.id = save_id ;
+					save_id = save_id + 1 ;
+
 
 					links.push({
 						'source': vm,
@@ -264,6 +352,7 @@ function molecule_graph(graph, data, width)
 				});
 			});
 		});
+
 
 		// Initially places pools, hosts and VMs on concentric
 		// circles.
@@ -298,33 +387,33 @@ function molecule_graph(graph, data, width)
 		});
 
 		return [
-			pools.concat(hosts, vms),
+			pools,hosts, vms,
 			links
 		];
 	}
 
 	//--------------------------------------
 
-	function select_node(d, current_node_i)
+	function select_node(d)
 	{
-		if (current_node === this)
+		if (d.id === last_id)
 		{
 			previous_view();
 			return;
+
 		}
 
-		// @todo Mutualize.
-		if (current_node)
-		{
-			d3.select(current_node).classed('selected', false);
-		}
+
+	//	d3.select(current_node).classed('selected', false);
+
+
 		// Marks this node as selected.
-		current_node = this;
+		last_id = d.id;
 		d3.select(this).classed('selected', true);
 
 		// @todo Fade any other links and node.
-		node.select('circle').transition().duration(duration).style('fill', function (d, i) {
-			if (current_node_i === i)
+		pool_node.select('circle').transition().duration(duration).style('fill', function (d, i) {
+			if (last_id === d.id )
 			{
 				return null;
 			}
@@ -337,6 +426,37 @@ function molecule_graph(graph, data, width)
 				old.b * 0.1 + bg.b * 0.9
 			).toString();
 		});
+
+		host_node.select('rect').transition().duration(duration).style('fill', function (d, i) {
+			if (last_id === d.id )
+			{
+				return null;
+			}
+			var old = d3.rgb(d3.select(this).attr('fill'));
+			var bg = d3.rgb('white');
+
+			return d3.rgb(
+				old.r * 0.1 + bg.r * 0.9,
+				old.g * 0.1 + bg.g * 0.9,
+				old.b * 0.1 + bg.b * 0.9
+			).toString();
+		});
+
+		vm_node.select('path').transition().duration(duration).style('fill', function (d, i) {
+			if (last_id === d.id )
+			{
+				return null;
+			}
+			var old = d3.rgb(d3.select(this).attr('fill'));
+			var bg = d3.rgb('white');
+
+			return d3.rgb(
+				old.r * 0.1 + bg.r * 0.9,
+				old.g * 0.1 + bg.g * 0.9,
+				old.b * 0.1 + bg.b * 0.9
+			).toString();
+		});
+
 		link.transition().duration(duration).style('stroke-opacity', 0.1);
 
 		// Zooms on the selected node.
@@ -376,17 +496,25 @@ function molecule_graph(graph, data, width)
 
 	function reset_view()
 	{
-		// @todo Mutualize.
-		if (current_node)
-		{
-			d3.select(current_node).classed('selected', false);
-			current_node = null;
+				last_id = -1;
 
-			node.select('circle').transition().duration(duration).style('fill', function() {
-				return d3.select(this).attr('fill');
-			});
-			link.transition().duration(duration).style('stroke-opacity', 1);
-		}
+
+		d3.selectAll(".pool").classed('selected', false);
+
+		d3.selectAll(".rect").classed('selected', false);
+
+		d3.selectAll(".path").classed('selected', false);
+
+		pool_node.select('circle').transition().duration(duration).style('fill', function() {
+			return d3.select(this).attr('fill');
+		});
+		host_node.select('rect').transition().duration(duration).style('fill', function() {
+			return d3.select(this).attr('fill');
+		});
+		vm_node.select('path').transition().duration(duration).style('fill', function() {
+			return d3.select(this).attr('fill');
+		});
+		link.transition().duration(duration).style('stroke-opacity', 1);
 
 		group.transition().duration(duration).attr(
 			'transform',
@@ -405,18 +533,27 @@ function molecule_graph(graph, data, width)
 
 	function previous_view()
 	{
+
+		last_id = -1;
+
 		// @todo Mutualize.
-		if (current_node)
-		{
-			d3.select(current_node).classed('selected', false);
-			current_node = null;
 
-			node.select('circle').transition().duration(duration).style('fill', function() {
-				return d3.select(this).attr('fill');
-			});
-			link.transition().duration(duration).style('stroke-opacity', 1);
-		}
+		d3.selectAll(".pool").classed('selected', false);
 
+		d3.selectAll(".rect").classed('selected', false);
+
+		d3.selectAll(".path").classed('selected', false);
+
+		pool_node.select('circle').transition().duration(duration).style('fill', function() {
+			return d3.select(this).attr('fill');
+		});
+		host_node.select('rect').transition().duration(duration).style('fill', function() {
+			return d3.select(this).attr('fill');
+		});
+		vm_node.select('path').transition().duration(duration).style('fill', function() {
+			return d3.select(this).attr('fill');
+		});
+		link.transition().duration(duration).style('stroke-opacity', 1);
 
 
 		group.transition().duration(duration).attr(
