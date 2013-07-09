@@ -233,15 +233,16 @@ function molecule_graph(graph, data, width)
 
 		//------------------
 
-		node = group.append('g').attr('class', '.node')
-		;
-
-		pool_node = node.selectAll('.pool').data(tmp[0],function(d) {
+		pool_node = group.selectAll('.pool').data(tmp[0],function(d) {
 				return d.id;
 			})
+
+
+
+		pool_node
 			.enter()
 			.append('g')
-			.attr('class', 'pool')
+			.attr('class', 'pool node')
 			.on('click', select_node)
 			.attr(
 				'transform',
@@ -258,23 +259,27 @@ function molecule_graph(graph, data, width)
 
 
 		// @todo Shift position.
-		pool_node.append('text')
+		pool_node
+			.append('text')
 			.text(function (d) {
 				return d.label;
 			})
 		;
 
-		node.selectAll('.pool').data(tmp[0],function(d,i) {
-				return i;
-			}).exit().remove();
+		pool_node.exit().remove();
 
 		//------------------
-
-		 host_node = node.selectAll('.host').data(tmp[1],function(d){
+		host_node = group.selectAll('.host').data(tmp[1],function(d){
 				return d.id;
 			})
-			.enter().append('g')
-			.attr('class', 'host')
+		;
+
+
+
+		host_node
+			.enter()
+			.append('g')
+			.attr('class', 'host node')
 			.on('click', select_node)
 		;
 
@@ -288,23 +293,21 @@ function molecule_graph(graph, data, width)
 			})
 		;
 
-		node.selectAll('.host').data(tmp[1],function(d,i){
-				return i;
-		}).exit().remove();
+		host_node.exit().remove();
 
 		//------------------
-
-		 vm_node = node.selectAll('.vm').data(tmp[2],function(d){
+		 vm_node = group.selectAll('.vm').data(tmp[2],function(d){
 				return d.id;
 			})
-			.enter().append('g')
-			.attr('class', 'vm')
-			.on('click', select_node)
-
 		;
 
-		alpha = 0;
-		polygon(vm_node,3,15,alpha).attr('fill', node_color);
+		vm_node
+			.enter().append('g')
+			.attr('class', 'vm node')
+			.on('click', select_node)
+		;
+
+		polygon(vm_node,3,15,0).attr('fill', node_color);
 
 		// @todo Shift position.
 		vm_node.append('text')
@@ -313,9 +316,7 @@ function molecule_graph(graph, data, width)
 			})
 		;
 
-		node.selectAll('.vm').data(tmp[2],function(d,i){
-			return i;
-		}).exit().remove();
+		vm_node.exit().remove();
 
 		//-------------------
 		// Caption
