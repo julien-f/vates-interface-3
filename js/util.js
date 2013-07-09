@@ -1,17 +1,17 @@
 /* exported polygon */
-function polygon(object, nb_edges,radius)
+function polygon(object, nb_edges,radius,alpha)
 {
 	'use strict';
 
 	var coords = [];
-	var angle = 2 * Math.PI/nb_edges;
+	var angle = 2 * Math.PI/nb_edges ;
 
 	for (var i =0; i < nb_edges; ++i)
 	{
-		var angle_i = angle * i;
+		var angle_i = angle * i + alpha  ;
 
 		coords.push(
-			Math.cos(angle_i) * radius, // x
+			Math.cos(angle_i) * radius , // x
 			Math.sin(angle_i) * radius  // y
 		);
 	}

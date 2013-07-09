@@ -11,6 +11,7 @@ function molecule_graph(graph, data, width)
 
 	//--------------------------------------
 
+	var caption;
 	// resize coeff
 	var coeffic =0.25; // one on the scale in graph.js
 	var transcoeff = -(coeffic  * 100 ); // initial state is -100 / -100 needed to be multiplicate by the coeff
@@ -83,6 +84,11 @@ function molecule_graph(graph, data, width)
 
 	//======================================
 
+	var selcaption;
+	//caption if selected or not
+	var selected_caption = false;
+
+
 	// last id who take for select
 	var last_id = -1 ;
 
@@ -154,6 +160,17 @@ function molecule_graph(graph, data, width)
 					return 'translate('+ (d.x) +','+ (d.y) +')';
 				}
 			);
+			vm_node.select('path').attr(
+				'transform',
+				function (d) {
+					var x = d.host.x - d.x;
+					var y = d.host.y - d.y;
+
+					var angle = Math.acos(x / Math.sqrt(x*x + y*y)) / Math.PI * 180 + 180;
+
+					return 'rotate('+ (y < 0 ? -angle : angle) +')';
+				}
+			);
 
 			link
 				.attr('x1', function(d) { return d.source.x; })
@@ -221,7 +238,6 @@ function molecule_graph(graph, data, width)
 
 		pool_node = node.selectAll('.pool').data(tmp[0],function(d) {
 				return d.id;
-
 			})
 			.enter()
 			.append('g')
@@ -256,14 +272,14 @@ function molecule_graph(graph, data, width)
 
 		 host_node = node.selectAll('.host').data(tmp[1],function(d){
 				return d.id;
-
 			})
 			.enter().append('g')
 			.attr('class', 'host')
 			.on('click', select_node)
 		;
 
-		polygon(host_node,4,15).attr('fill', node_color);
+		var alpha = Math.PI / 4;
+		polygon(host_node,4,15,alpha).attr('fill', node_color);
 
 		// @todo Shift position.
 		host_node.append('text')
@@ -274,15 +290,12 @@ function molecule_graph(graph, data, width)
 
 		node.selectAll('.host').data(tmp[1],function(d,i){
 				return i;
-
 		}).exit().remove();
 
 		//------------------
 
-
 		 vm_node = node.selectAll('.vm').data(tmp[2],function(d){
 				return d.id;
-
 			})
 			.enter().append('g')
 			.attr('class', 'vm')
@@ -290,7 +303,8 @@ function molecule_graph(graph, data, width)
 
 		;
 
-		polygon(vm_node,3,15).attr('fill', node_color);
+		alpha = 0;
+		polygon(vm_node,3,15,alpha).attr('fill', node_color);
 
 		// @todo Shift position.
 		vm_node.append('text')
@@ -302,9 +316,25 @@ function molecule_graph(graph, data, width)
 		node.selectAll('.vm').data(tmp[2],function(d,i){
 			return i;
 		}).exit().remove();
+
+		//-------------------
+		// Caption
+
+		caption = graph.append('g').attr('class', 'caption');
+
+		caption.on('click', caption_node);
+
+		alpha = Math.PI / 4;
+
+		polygon(caption,4,10,alpha).attr('fill','white').attr('stroke', 'black').attr('stroke-width',1);
+
+		polygon(caption,4,5,alpha).attr('fill','white').attr('stroke', 'black').attr('stroke-width',1);
+
+		caption.attr(
+					'transform',
+					'translate ('+ (width/2-2.5) +','+ (100-2.5) +') scale('+coeffic+')')
+		;
 	}
-
-
 	//--------------------------------------
 
 	function create_nodes_and_links(pools)
@@ -339,11 +369,12 @@ function molecule_graph(graph, data, width)
 				_.each(host.vms, function (vm,i) {
 					vms.push(vm);
 
-
 					vm.type = TYPE_VM;
 					vm.id = save_id ;
 					save_id = save_id + 1 ;
 
+					// For angle computing we need to access its host.
+					vm.host = host;
 
 					links.push({
 						'source': vm,
@@ -353,7 +384,6 @@ function molecule_graph(graph, data, width)
 				});
 			});
 		});
-
 
 		// Initially places pools, hosts and VMs on concentric
 		// circles.
@@ -405,10 +435,6 @@ function molecule_graph(graph, data, width)
 			return;
 
 		}
-
-
-	//	d3.select(current_node).classed('selected', false);
-
 
 		// Marks this node as selected.
 		last_id = d.id;
@@ -531,7 +557,6 @@ function molecule_graph(graph, data, width)
 	}
 
 	//--------------------------------------
-
 	function previous_view()
 	{
 
@@ -565,5 +590,89 @@ function molecule_graph(graph, data, width)
 		//--------------------------------------
 		//delete pie graph
 		graph.selectAll('.pie').remove();
+	}
+
+	//--------------------------------------
+	function caption_node ()
+	{
+
+		if ( selected_caption == false )
+		{
+			var margin = 25;
+			selcaption = caption.append('g');
+			selcaption.append('rect')
+				.attr('x',-150)
+				.attr('y',-200)
+				.attr('width',150)
+				.attr('height',200)
+				.attr('fill','white')
+				.attr('stroke', 'black')
+				.attr('stroke-width',(1))
+			;
+
+			//--------------------------------------
+			var pool_caption = selcaption.append('g')
+				.attr(
+					'transform',
+					'translate('+(-150+margin+node_radius/2)+','+(-200*1/4)+')'
+				)
+			;
+
+			pool_caption.append('circle')
+				.attr('r',node_radius)
+				.attr('fill','#1f77b4')
+			;
+
+			pool_caption.append('text').attr('dx',50).attr('dy',4).text('POOL');
+
+			//--------------------------------------
+			var alpha = Math.PI / 4;
+
+			var host_caption = selcaption.append('g')
+				.attr(
+					'transform',
+					'translate('+(-150+15/2+margin)+','+(-200*2/4+15/2)+')'
+				)
+			;
+			polygon(host_caption,4,15,alpha)
+				.attr('fill', '#ff7f0e')
+			;
+
+			host_caption.append('text').attr('dx',50).attr('dy',4).text('HOST');
+
+			//--------------------------------------
+			var alpha = Math.PI / 3;
+
+			var vm_caption = selcaption.append('g')
+				.attr(
+					'transform',
+					'translate('+(-150+15/2+margin)+','+(-200*3/4)+')'
+				)
+			;
+			polygon(vm_caption,3,15,alpha).attr('fill', '#2ca02c');
+
+			vm_caption.append('text').attr('dx',50).attr('dy',4).text('VMS');
+
+
+			selected_caption=true;
+
+		}
+
+		else
+		{
+			selected_caption=false ;
+
+			selcaption.selectAll('rect').remove();
+
+			selcaption.selectAll('circle').remove();
+
+			selcaption.selectAll('path').remove();
+
+			selcaption.selectAll('text').remove();
+		}
+
+		// Prevents the event from being re-catched by “graph”.
+		d3.event.stopPropagation();
+
 	}
 }
