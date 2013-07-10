@@ -35,31 +35,33 @@
 
     //------------------------------------------
     // Take windows dimansion.
-	function winDim() {
+	function winDim()
+	{
 
-	var W,H,
-		i = window,
-		d = document,
-		de = d.documentElement,
-		db = d.body;
+		var W,H,
+			i = window,
+			d = document,
+			de = d.documentElement,
+			db = d.body;
 
-	if ( i.innerWidth ) {			 // other of IE
-		W = i.innerWidth;
-		H = i.innerHeight;
+		if ( i.innerWidth )
+		{			 // other of IE
+			W = i.innerWidth;
+			H = i.innerHeight;
+		}
+		else if ( de.clientWidth )
+		{ // IE8
+			W = de.clientWidth;
+			H = de.clientHeight;
+		}
 
-	} else if ( de.clientWidth ) { // IE8
-		W = de.clientWidth;
-		H = de.clientHeight;
-
-	}
-
-	else { // IE6
-		W = db.clientWidth;
-		H = db.clientHeight;
-	}
+		else
+		{ // IE6
+			W = db.clientWidth;
+			H = db.clientHeight;
+		}
 
 		return {w:W,h:H} ;
-
 	}
 	// END OF WINDIM
 	////////////////////////////////////////

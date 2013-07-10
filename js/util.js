@@ -3,19 +3,37 @@ function polygon(object, nb_edges,radius,alpha)
 {
 	'use strict';
 
-	var coords = [];
-	var angle = 2 * Math.PI/nb_edges ;
+	var angle = 2 * Math.PI/nb_edges;
 
-	for (var i =0; i < nb_edges; ++i)
+	function path(d)
 	{
-		var angle_i = angle * i + alpha  ;
+		var coords = [];
 
-		coords.push(
-			Math.cos(angle_i) * radius , // x
-			Math.sin(angle_i) * radius  // y
-		);
+		var r = radius(d);
+		for (var i =0; i < nb_edges; ++i)
+		{
+			var angle_i = angle * i + alpha  ;
+
+			coords.push(
+				Math.cos(angle_i) * r, // x
+				Math.sin(angle_i) * r  // y
+			);
+		}
+
+		return ('M'+ coords.join(' ') +'Z');
+	}
+
+	// @todo Ugly code: replace.
+	if (!_.isFunction(radius))
+	{
+		radius = function (radius) {
+			return function () {
+				return radius;
+			};
+		}(radius);
+		path = path();
 	}
 
 	return object.append('path')
-		.attr('d','M'+ coords.join(' ') +'Z');
+		.attr('d', path);
 }

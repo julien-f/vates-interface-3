@@ -90,12 +90,12 @@ function molecule_graph(graph, data, width)
 
 
 	// last id who take for select
-	var last_id = -1 ;
+	var last_id = -2 ;
 
 	//force propriety
-	var charge = -500 ;
+	var charge = function (d) { console.log(d.mass*-20); return d.mass*d.mass*-10 ;   };
 	var gravity = 0.1  ;
-	var linkdistance = 75 ;
+	var default_distance = 75 ;
 
 	var TYPE_POOL = 0;
 	var TYPE_HOST = 1;
@@ -111,7 +111,7 @@ function molecule_graph(graph, data, width)
 	var vm_distance = 100 ;
 
 	// Node radius (can be a function).
-	var node_radius = 15 ;
+	var node_radius = function (d) { return d.mass;   }; ;
 
 	// Node color (can be a function).
 	var node_color = function (node) {
@@ -138,7 +138,7 @@ function molecule_graph(graph, data, width)
 		.size([200, 200])
 		.charge(charge)
 		.linkDistance(function (link) {
-			return link.distance || linkdistance;
+			return link.distance || default_distance;
 		})
 		.gravity(gravity)
 		.on('tick', function () {
@@ -202,7 +202,9 @@ function molecule_graph(graph, data, width)
 			links = links.slice();
 
 			nodes.push(center);
+			center.mass = 5;
 			_.each(data, function (pool) {
+
 				links.push({
 					'source': center,
 					'target': pool,
@@ -234,8 +236,8 @@ function molecule_graph(graph, data, width)
 		//------------------
 
 		pool_node = group.selectAll('.pool').data(tmp[0],function(d) {
-				return d.id;
-			})
+			return d.id;
+		});
 
 
 
@@ -274,9 +276,7 @@ function molecule_graph(graph, data, width)
 			})
 		;
 
-
-
-		host_node
+		var new_host = host_node
 			.enter()
 			.append('g')
 			.attr('class', 'host node')
@@ -284,7 +284,7 @@ function molecule_graph(graph, data, width)
 		;
 
 		var alpha = Math.PI / 4;
-		polygon(host_node,4,15,alpha).attr('fill', node_color);
+		polygon(new_host, 4,node_radius,alpha).attr('fill', node_color);
 
 		// @todo Shift position.
 		host_node.append('text')
@@ -301,13 +301,13 @@ function molecule_graph(graph, data, width)
 			})
 		;
 
-		vm_node
+		var new_node = vm_node
 			.enter().append('g')
 			.attr('class', 'vm node')
 			.on('click', select_node)
 		;
 
-		polygon(vm_node,3,15,0).attr('fill', node_color);
+		polygon(new_node,3,node_radius,0).attr('fill', node_color);
 
 		// @todo Shift position.
 		vm_node.append('text')
@@ -341,7 +341,8 @@ function molecule_graph(graph, data, width)
 	function create_nodes_and_links(pools)
 	{
 		var links = [];
-
+		var min_mass = 5 ;
+		var max_mass = 20 ;
 		var hosts = [];
 		var vms   = [];
 
@@ -354,12 +355,15 @@ function molecule_graph(graph, data, width)
 			pool.id = save_id ;
 			save_id = save_id + 1 ;
 
+			pool.mass = _.random(min_mass, max_mass);
 			_.each(pool.hosts, function (host,i) {
 				hosts.push(host);
 
 				host.type = TYPE_HOST;
 				host.id = save_id ;
 				save_id = save_id + 1 ;
+
+				host.mass = _.random(min_mass, max_mass);
 
 				links.push({
 					'source': host,
@@ -373,6 +377,8 @@ function molecule_graph(graph, data, width)
 					vm.type = TYPE_VM;
 					vm.id = save_id ;
 					save_id = save_id + 1 ;
+
+					vm.mass = _.random(min_mass, max_mass);
 
 					// For angle computing we need to access its host.
 					vm.host = host;
@@ -399,7 +405,7 @@ function molecule_graph(graph, data, width)
 			var alpha_i = alpha * i;
 			pool.x = Math.cos(alpha_i) * radius + mid_w;
 			pool.y = Math.sin(alpha_i) * radius + mid_h;
-			pool.fixed = true;  // fixed the position of poom.
+			//pool.fixed = true;  // fixed the position of poom.
 		});
 
 		alpha = TWO_PI / hosts.length;
@@ -430,15 +436,17 @@ function molecule_graph(graph, data, width)
 	{
 		/* jshint validthis:true */
 
-		if (d.id === last_id)
+		if (d.id==last_id)
 		{
 			previous_view();
 			return;
+		}
+		if (d.id != -1)
+		{
 
 		}
-
 		// Marks this node as selected.
-		last_id = d.id;
+
 		d3.select(this).classed('selected', true);
 
 		// @todo Fade any other links and node.
@@ -516,6 +524,8 @@ function molecule_graph(graph, data, width)
 			)
 		;
 
+		last_id = d.id;
+
 		//call pie graph to ram visualisation.
 		pie_graph(graphpie,data);
 	}
@@ -524,14 +534,13 @@ function molecule_graph(graph, data, width)
 
 	function reset_view()
 	{
-				last_id = -1;
-
+		last_id = -1;
 
 		d3.selectAll('.pool').classed('selected', false);
 
-		d3.selectAll('.path').classed('selected', false);
+		d3.selectAll('.host').classed('selected', false);
 
-		d3.selectAll('.path').classed('selected', false);
+		d3.selectAll('.vm').classed('selected', false);
 
 		pool_node.select('circle').transition().duration(duration).style('fill', function() {
 			return d3.select(this).attr('fill');
@@ -560,16 +569,15 @@ function molecule_graph(graph, data, width)
 	//--------------------------------------
 	function previous_view()
 	{
-
 		last_id = -1;
 
 		// @todo Mutualize.
 
 		d3.selectAll('.pool').classed('selected', false);
 
-		d3.selectAll('.path').classed('selected', false);
+		d3.selectAll('.host').classed('selected', false);
 
-		d3.selectAll('.path').classed('selected', false);
+		d3.selectAll('.vm').classed('selected', false);
 
 		pool_node.select('circle').transition().duration(duration).style('fill', function() {
 			return d3.select(this).attr('fill');
@@ -581,7 +589,6 @@ function molecule_graph(graph, data, width)
 			return d3.select(this).attr('fill');
 		});
 		link.transition().duration(duration).style('stroke-opacity', 1);
-
 
 		group.transition().duration(duration).attr(
 			'transform',
