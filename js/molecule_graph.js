@@ -93,8 +93,8 @@ function molecule_graph(graph, data, width)
 	var last_id = -2 ;
 
 	//force propriety
-	var charge = function (d) { console.log(d.mass*-20); return d.mass*d.mass*-10 ;   };
-	var gravity = 0.1  ;
+	var charge = function (d) { return d.mass*d.mass * -20 ;   };
+	var gravity = 0.5  ;
 	var default_distance = 75 ;
 
 	var TYPE_POOL = 0;
@@ -111,7 +111,7 @@ function molecule_graph(graph, data, width)
 	var vm_distance = 100 ;
 
 	// Node radius (can be a function).
-	var node_radius = function (d) { return d.mass;   }; ;
+	var node_radius = function (d) { return d.mass*1.5;   }; ;
 
 	// Node color (can be a function).
 	var node_color = function (node) {
@@ -202,7 +202,7 @@ function molecule_graph(graph, data, width)
 			links = links.slice();
 
 			nodes.push(center);
-			center.mass = 5;
+			center.mass = 20;
 			_.each(data, function (pool) {
 
 				links.push({
@@ -307,7 +307,8 @@ function molecule_graph(graph, data, width)
 			.on('click', select_node)
 		;
 
-		polygon(new_node,3,node_radius,0).attr('fill', node_color);
+		var alpha = Math.PI / 3;
+		polygon(new_node,3,node_radius,alpha).attr('fill', node_color);
 
 		// @todo Shift position.
 		vm_node.append('text')
@@ -341,8 +342,8 @@ function molecule_graph(graph, data, width)
 	function create_nodes_and_links(pools)
 	{
 		var links = [];
-		var min_mass = 5 ;
-		var max_mass = 20 ;
+		var min_mass = 15 ;
+		var max_mass = 25 ;
 		var hosts = [];
 		var vms   = [];
 
@@ -405,7 +406,7 @@ function molecule_graph(graph, data, width)
 			var alpha_i = alpha * i;
 			pool.x = Math.cos(alpha_i) * radius + mid_w;
 			pool.y = Math.sin(alpha_i) * radius + mid_h;
-			//pool.fixed = true;  // fixed the position of poom.
+			pool.fixed = true;  // fixed the position of poom.
 		});
 
 		alpha = TWO_PI / hosts.length;
