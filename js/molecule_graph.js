@@ -13,7 +13,7 @@ function molecule_graph(graph, data, width)
 
 	var caption;
 	// resize coeff
-	var coeffic =0.25; // one on the scale in graph.js
+	var coeffic = 0.1   ; // one on the scale in graph.js
 	var transcoeff = -(coeffic  * 100 ); // initial state is -100 / -100 needed to be multiplicate by the coeff
 
 	//--------------------------------------
@@ -52,6 +52,15 @@ function molecule_graph(graph, data, width)
 		.attr('id', 'molecule-graph')
 		.attr('transform', 'translate('+transcoeff+','+transcoeff+') scale('+coeffic+')') // Initial translation * by the coeff.
 	;
+
+	var loading = graph.append("text")
+		.attr('x', 0)
+		.attr('y', 0)
+	    .attr('dy', '.35em')
+	    .attr("text-anchor", "middle")
+	    .text("simulating. one moment please…")
+    ;
+
 
 	//--------------------------------------
 
@@ -115,8 +124,18 @@ function molecule_graph(graph, data, width)
 
 	// Node color (can be a function).
 	var node_color = function (node) {
-		var colors = ['#1f77b4', '#ff7f0e', '#2ca02c'];
-		return colors[node.type];
+		if (node.type == 0 ){
+			var green = Math.ceil(255-node.ram/100 * 200) ;
+			return 'rgb(00,'+green+',200)' ;  // 0%-25% = 1, .... 75%-100% = 4
+		}
+		else if (node.type == 1){
+			var green = Math.ceil(255-node.ram/100 * 200);
+			return 'rgb(200,'+green+',00)' ;  // 0%-25% = 1, .... 75%-100% = 4
+		}
+		else {
+			var blue = Math.ceil(255-node.ram/100 * 200) ;
+			return 'rgb(00,200,'+blue+')' ;  // 0%-25% = 1, .... 75%-100% = 4
+		 }
 	};
 
 	// Animation duration.
@@ -141,49 +160,11 @@ function molecule_graph(graph, data, width)
 			return link.distance || default_distance;
 		})
 		.gravity(gravity)
-		.on('tick', function () {
-			pool_node.attr(
-				'transform',
-				function (d) {
-					return 'translate('+ d.x +','+ d.y +')';
-				}
-			);
-			host_node.attr(
-				'transform',
-				function (d) {
-					return 'translate('+ (d.x)+','+ (d.y) +')';
-				}
-			);
-			vm_node.attr(
-				'transform',
-				function (d) {
-					return 'translate('+ (d.x) +','+ (d.y) +')';
-				}
-			);
-			vm_node.select('path').attr(
-				'transform',
-				function (d) {
-					var x = d.host.x - d.x;
-					var y = d.host.y - d.y;
-
-					var angle = Math.acos(x / Math.sqrt(x*x + y*y)) / Math.PI * 180 + 180;
-
-					return 'rotate('+ (y < 0 ? -angle : angle) +')';
-				}
-			);
-
-			link
-				.attr('x1', function(d) { return d.source.x; })
-				.attr('y1', function(d) { return d.source.y; })
-				.attr('x2', function(d) { return d.target.x; })
-				.attr('y2', function(d) { return d.target.y; })
-			;
-		})
 	;
 
 	update();
-
 	//--------------------------------------
+
 
 	function update()
 	{
@@ -217,221 +198,139 @@ function molecule_graph(graph, data, width)
 			;
 		}(nodes, links);
 
-		force.start();
+		setTimeout(function() {
 
-		//------------------
+			//------------------
 
-		link = group.selectAll('.link').data(links, function (link, i) {
-			// @todo
-			return i;
-		});
-
-		link.enter().append('line')
-			.attr('class', 'link')
-			.attr('stroke', 'black') // @todo CSS.
-		;
-
-		link.exit().remove();
-
-		//------------------
-
-		pool_node = group.selectAll('.pool').data(tmp[0],function(d) {
-			return d.id;
-		});
-
-
-
-		pool_node
-			.enter()
-			.append('g')
-			.attr('class', 'pool node')
-			.on('click', select_node)
-			.attr(
-				'transform',
-				function (d) {
-					return 'translate('+ d.x +','+ d.y +')';
-				}
-			)
-		;
-
-		pool_node.append('circle')
-			.attr('r', node_radius)
-			.attr('fill', node_color)
-		;
-
-
-		// @todo Shift position.
-		pool_node
-			.append('text')
-			.text(function (d) {
-				return d.label;
-			})
-		;
-
-		pool_node.exit().remove();
-
-		//------------------
-		host_node = group.selectAll('.host').data(tmp[1],function(d){
-				return d.id;
-			})
-		;
-
-		var new_host = host_node
-			.enter()
-			.append('g')
-			.attr('class', 'host node')
-			.on('click', select_node)
-		;
-
-		var alpha = Math.PI / 4;
-		polygon(new_host, 4,node_radius,alpha).attr('fill', node_color);
-
-		// @todo Shift position.
-		host_node.append('text')
-			.text(function (d) {
-				return d.label;
-			})
-		;
-
-		host_node.exit().remove();
-
-		//------------------
-		 vm_node = group.selectAll('.vm').data(tmp[2],function(d){
-				return d.id;
-			})
-		;
-
-		var new_node = vm_node
-			.enter().append('g')
-			.attr('class', 'vm node')
-			.on('click', select_node)
-		;
-
-		var alpha = Math.PI / 3;
-		polygon(new_node,3,node_radius,alpha).attr('fill', node_color);
-
-		// @todo Shift position.
-		vm_node.append('text')
-			.text(function (d) {
-				return d.label;
-			})
-		;
-
-		vm_node.exit().remove();
-
-		//-------------------
-		// Caption
-
-		caption = graph.append('g').attr('class', 'caption');
-
-		caption.on('click', caption_node);
-
-		alpha = Math.PI / 4;
-
-		polygon(caption,4,10,alpha).attr('fill','white').attr('stroke', 'black').attr('stroke-width',1);
-
-		polygon(caption,4,5,alpha).attr('fill','white').attr('stroke', 'black').attr('stroke-width',1);
-
-		caption.attr(
-					'transform',
-					'translate ('+ (width/2-2.5) +','+ (100-2.5) +') scale('+coeffic+')')
-		;
-	}
-	//--------------------------------------
-
-	function create_nodes_and_links(pools)
-	{
-		var links = [];
-		var min_mass = 15 ;
-		var max_mass = 25 ;
-		var hosts = [];
-		var vms   = [];
-
-		var save_id = 0;
-
-		// Finds all nested hosts and VMs, defines their “type”
-		// attribute and creates links to their parent.
-		_.each(pools, function (pool) {
-			pool.type = TYPE_POOL;
-			pool.id = save_id ;
-			save_id = save_id + 1 ;
-
-			pool.mass = _.random(min_mass, max_mass);
-			_.each(pool.hosts, function (host,i) {
-				hosts.push(host);
-
-				host.type = TYPE_HOST;
-				host.id = save_id ;
-				save_id = save_id + 1 ;
-
-				host.mass = _.random(min_mass, max_mass);
-
-				links.push({
-					'source': host,
-					'target': pool,
-					'distance': host_distance,
-				});
-
-				_.each(host.vms, function (vm,i) {
-					vms.push(vm);
-
-					vm.type = TYPE_VM;
-					vm.id = save_id ;
-					save_id = save_id + 1 ;
-
-					vm.mass = _.random(min_mass, max_mass);
-
-					// For angle computing we need to access its host.
-					vm.host = host;
-
-					links.push({
-						'source': vm,
-						'target': host,
-						'distance': vm_distance,
-					});
-				});
+			link = group.selectAll('.link').data(links, function (link, i) {
+				// @todo
+				return i;
 			});
-		});
 
-		// Initially places pools, hosts and VMs on concentric
-		// circles.
+			link.enter().append('line')
+				.attr('class', 'link')
+				.attr('stroke', 'black') // @todo CSS.
+			;
 
-		var mid_h = 100;
-		var mid_w = 100;
-		var TWO_PI = 2 * Math.PI;
+			link.exit().remove();
 
-		var alpha = TWO_PI / pools.length;
-		var radius = pool_distance;
-		_.each(pools, function (pool, i) {
-			var alpha_i = alpha * i;
-			pool.x = Math.cos(alpha_i) * radius + mid_w;
-			pool.y = Math.sin(alpha_i) * radius + mid_h;
-			pool.fixed = true;  // fixed the position of poom.
-		});
+			//------------------
 
-		alpha = TWO_PI / hosts.length;
-		radius = pool_distance + host_distance;
-		_.each(hosts, function (host, i) {
-			var alpha_i = alpha * i;
-			host.x = Math.cos(alpha_i) * radius + mid_w;
-			host.y = Math.sin(alpha_i) * radius + mid_h;
-		});
+			pool_node = group.selectAll('.pool').data(tmp[0],function(d) {
+				return d.id;
+			});
 
-		alpha = TWO_PI / vms.length;
-		radius = pool_distance + host_distance + vm_distance;
-		_.each(vms, function (vm, i) {
-			var alpha_i = alpha * i;
-			vm.x = Math.cos(alpha_i) * radius + mid_w;
-			vm.y = Math.sin(alpha_i) * radius + mid_h;
-		});
 
-		return [
-			pools,hosts, vms,
-			links
-		];
+
+			pool_node
+				.enter()
+				.append('g')
+				.attr('class', 'pool node')
+				.on('click', select_node)
+				.attr(
+					'transform',
+					function (d) {
+						return 'translate('+ d.x +','+ d.y +')';
+					}
+				)
+			;
+
+			pool_node.append('circle')
+				.attr('r', node_radius)
+				.attr('fill', node_color)
+			;
+
+
+			// @todo Shift position.
+			pool_node
+				.append('text')
+				.text(function (d) {
+					return d.label;
+				})
+			;
+
+			pool_node.exit().remove();
+
+			//------------------
+			host_node = group.selectAll('.host').data(tmp[1],function(d){
+					return d.id;
+				})
+			;
+
+			var new_host = host_node
+				.enter()
+				.append('g')
+				.attr('class', 'host node')
+				.on('click', select_node)
+			;
+
+			var alpha = 0;
+			polygon(new_host, 4,node_radius,alpha).attr('fill', node_color);
+
+			// @todo Shift position.
+			host_node.append('text')
+				.text(function (d) {
+					return d.label;
+				})
+			;
+
+			host_node.exit().remove();
+
+			//------------------
+			 vm_node = group.selectAll('.vm').data(tmp[2],function(d){
+					return d.id;
+				})
+			;
+
+			var new_vm = vm_node
+				.enter().append('g')
+				.attr('class', 'vm node')
+				.on('click', select_node)
+			;
+
+			var alpha = Math.PI / 3;
+			polygon(new_vm,3,node_radius,alpha).attr('fill', node_color);
+
+			// @todo Shift position.
+			vm_node.append('text')
+				.text(function (d) {
+					return d.label;
+				})
+			;
+
+			vm_node.exit().remove();
+
+			//-------------------
+			// Caption
+
+			caption = graph.append('g').attr('class', 'caption');
+
+			caption.on('click', caption_node);
+
+			alpha = Math.PI / 4;
+
+			polygon(caption,4,10,alpha).attr('fill','white').attr('stroke', 'black').attr('stroke-width',1);
+
+			polygon(caption,4,5,alpha).attr('fill','white').attr('stroke', 'black').attr('stroke-width',1);
+
+			caption.attr(
+						'transform',
+						'translate ('+ (width/2-2.5) +','+ (100-2.5) +') scale('+coeffic+')')
+			;
+
+			var n = 100;
+			force.start();
+			for (var i = n * n; i > 0; --i)
+			{
+				force.tick();
+			}
+			force.stop();
+			tick ();
+			loading.remove();
+
+		}, 100);
 	}
-
-	//--------------------------------------
+		//--------------------------------------
 
 	function select_node(d)
 	{
@@ -515,20 +414,35 @@ function molecule_graph(graph, data, width)
 		//--------------------------------------
 		//area where pie where be call
 
-		var coeff = 0.3;
-
-		var graphpie = graph.append('g')
-		.attr('class','pie')
-		.attr(
-				'transform',
-				'translate('+ (-width/2+100*coeff) +','+ (-100+100*coeff) +') scale('+coeff+')'
-			)
-		;
+		if (d.type == 0)
+		{
+			var coeff = 0.5;
+			var graphpie = graph.append('g')
+			.attr('class','pie')
+			.attr(
+					'transform',
+					'translate('+ (-width/2+100*coeff) +','+ (-100+100*coeff) +') scale('+coeff+')'
+				)
+			;
+			//call pie graph to ram visualisation.
+			pie_2_graph(graphpie,data);
+		}
+		else if (d.type == 1)
+		{
+			var coeff = 0.5;
+			var graphpie = graph.append('g')
+			.attr('class','pie')
+			.attr(
+					'transform',
+					'translate('+ (-width/2+100*coeff) +','+ (-100+100*coeff) +') scale('+coeff+')'
+				)
+			;
+			//call pie graph to ram visualisation.
+			pie_graph(graphpie,data);
+		}
 
 		last_id = d.id;
 
-		//call pie graph to ram visualisation.
-		pie_graph(graphpie,data);
 	}
 
 	//--------------------------------------
@@ -683,5 +597,175 @@ function molecule_graph(graph, data, width)
 		// Prevents the event from being re-catched by “graph”.
 		d3.event.stopPropagation();
 
+	}
+	//--------------------------------------
+
+	function create_nodes_and_links(pools)
+	{
+		var links = [];
+		var hosts = [];
+		var vms   = [];
+
+
+		var save_id = 0;
+		var min_mass = 1 ;
+		var max_mass = 100 ;
+		var save_mass = 0 ;
+
+
+		// Finds all nested hosts and VMs, defines their “type”
+		// attribute and creates links to their parent.
+		_.each(pools, function (pool) {
+			pool.type = TYPE_POOL;
+			pool.id = save_id ;
+			save_id = save_id + 1 ;
+
+			pool.mass = pool.hosts.length * 15;
+			pool.ram = _.random(min_mass, max_mass);
+
+			_.each(pool.hosts, function (host,i) {
+				hosts.push(host);
+
+				host.type = TYPE_HOST;
+				host.id = save_id ;
+				save_id = save_id + 1 ;
+
+				if ( save_mass < host.vms.length ) {
+					save_mass=host.vms.length;
+				}
+
+				host.mass = host.vms.length * 7.5;
+
+				host.ram = _.random(min_mass, max_mass);
+
+				links.push({
+					'source': host,
+					'target': pool,
+					'distance': host_distance,
+				});
+
+					// For angle computing we need to access its host.
+					host.pool = pool;
+
+				_.each(host.vms, function (vm,i) {
+					vms.push(vm);
+
+					vm.type = TYPE_VM;
+					vm.id = save_id ;
+					save_id = save_id + 1 ;
+
+					vm.mass = _.random(15, 25);
+					vm.ram = _.random(min_mass, max_mass);
+
+					// For angle computing we need to access its host.
+					vm.host = host;
+
+					links.push({
+						'source': vm,
+						'target': host,
+						'distance': vm_distance,
+					});
+				});
+			});
+		});
+
+		// Initially places pools, hosts and VMs on concentric
+		// circles.
+
+		var mid_h = 100;
+		var mid_w = 100;
+		var TWO_PI = 2 * Math.PI;
+
+		var alpha = TWO_PI / pools.length;
+		var radius = (pool_distance * (save_mass/25)) * pools.length ;
+
+		_.each(pools, function (pool, i) {
+			var alpha_i = alpha * i;
+			pool.x = Math.cos(alpha_i) * radius + mid_w;
+			pool.y = Math.sin(alpha_i) * radius + mid_h;
+			pool.fixed = true;  // fixed the position of poom.
+		});
+
+		alpha = TWO_PI / hosts.length;
+		radius = pool_distance + host_distance;
+		_.each(hosts, function (host, i) {
+			var alpha_i = alpha * i;
+			host.x = Math.cos(alpha_i) * radius + mid_w;
+			host.y = Math.sin(alpha_i) * radius + mid_h;
+
+		});
+
+		alpha = TWO_PI / vms.length;
+		radius = pool_distance + host_distance + vm_distance;
+		_.each(vms, function (vm, i) {
+			var alpha_i = alpha * i;
+			vm.x = Math.cos(alpha_i) * radius + mid_w;
+			vm.y = Math.sin(alpha_i) * radius + mid_h;
+
+		});
+
+		return [
+			pools,hosts, vms,
+			links
+		];
+	}
+		//--------------------------------------
+
+	function tick () {
+
+		/* useless because they are freeze
+			pool_node.attr(
+				'transform',
+				function (d) {
+					return 'translate('+ d.x +','+ d.y +')';
+				}
+			);
+		*/
+
+			host_node.attr(
+				'transform',
+				function (d) {
+					return 'translate('+ (d.x)+','+ (d.y) +')';
+				}
+			);
+
+			host_node.select('path').attr(
+				'transform',
+				function (d) {
+					var x = d.pool.x - d.x;
+					var y = d.pool.y - d.y;
+
+					var angle = Math.acos(x / Math.sqrt(x*x + y*y)) / Math.PI * 180 + 180;
+
+					return 'rotate('+ (y < 0 ? -angle : angle) +')';
+				}
+			);
+
+			vm_node.attr(
+				'transform',
+				function (d) {
+					return 'translate('+ (d.x) +','+ (d.y) +')';
+
+
+				}
+			);
+			vm_node.select('path').attr(
+				'transform',
+				function (d) {
+					var x = d.host.x - d.x;
+					var y = d.host.y - d.y;
+
+					var angle = Math.acos(x / Math.sqrt(x*x + y*y)) / Math.PI * 180 + 180;
+
+					return 'rotate('+ (y < 0 ? -angle : angle) +')';
+				}
+			);
+
+			link
+				.attr('x1', function(d) { return d.source.x; })
+				.attr('y1', function(d) { return d.source.y; })
+				.attr('x2', function(d) { return d.target.x; })
+				.attr('y2', function(d) { return d.target.y; })
+			;
 	}
 }
