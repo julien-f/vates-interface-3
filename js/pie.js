@@ -34,11 +34,6 @@ function pie_graph(graph,data) {
 
 	//--------------------------------------
 
-
-
-
-	//--------------------------------------
-
 	var arc = d3.svg.arc() //Constructs a new arc generator
     	.outerRadius(90)
     	.innerRadius(50)

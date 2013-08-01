@@ -124,17 +124,27 @@ function molecule_graph(graph, data, width)
 
 	// Node color (can be a function).
 	var node_color = function (node) {
+
 		if (node.type == 0 ){
-			var green = Math.ceil(255-node.ram/100 * 200) ;
-			return 'rgb(00,'+green+',200)' ;  // 0%-25% = 1, .... 75%-100% = 4
+			var color = d3.scale.linear()
+				.domain([-100,100])
+				.range(["white","blue"])
+
+			return color(node.ram) ;
 		}
 		else if (node.type == 1){
-			var green = Math.ceil(255-node.ram/100 * 200);
-			return 'rgb(200,'+green+',00)' ;  // 0%-25% = 1, .... 75%-100% = 4
+			var color = d3.scale.linear()
+				.domain([-100,100])
+				.range(["white","orange"])
+			return color(node.ram);
 		}
+
 		else {
-			var blue = Math.ceil(255-node.ram/100 * 200) ;
-			return 'rgb(00,200,'+blue+')' ;  // 0%-25% = 1, .... 75%-100% = 4
+			var color = d3.scale.linear()
+				.domain([-100,100])
+				.range(["white","green"])
+
+			return color(node.ram);
 		 }
 	};
 
@@ -215,18 +225,17 @@ function molecule_graph(graph, data, width)
 			link.exit().remove();
 
 			//------------------
-
 			pool_node = group.selectAll('.pool').data(tmp[0],function(d) {
 				return d.id;
 			});
-
-
 
 			pool_node
 				.enter()
 				.append('g')
 				.attr('class', 'pool node')
 				.on('click', select_node)
+				.on('mouseover',over_node)
+				.on('mouseout',out_node)
 				.attr(
 					'transform',
 					function (d) {
@@ -262,6 +271,8 @@ function molecule_graph(graph, data, width)
 				.append('g')
 				.attr('class', 'host node')
 				.on('click', select_node)
+				.on('mouseover',over_node)
+				.on('mouseout',out_node)
 			;
 
 			var alpha = 0;
@@ -331,20 +342,62 @@ function molecule_graph(graph, data, width)
 		}, 100);
 	}
 		//--------------------------------------
+	function out_node()
+	{
+		//--------------------------------------
+		//delete pie graph
+		graph.selectAll('.pie').remove();
+	}
+
+		//--------------------------------------
+
+	function over_node(d)
+	{
+			var coeff = 0.5;
+
+
+		//--------------------------------------
+		//area where pie where be call
+		if (d.type == 0)
+		{
+		var graphpie = graph.append('g')
+			.attr('class','pie')
+			.attr(
+					'transform',
+					'translate('+ (-width/2+100*coeff) +','+ (-100+100*coeff) +') scale('+coeff+')'
+				)
+			;
+			//call pie graph to ram visualisation.
+			pie_2_graph(graphpie,data);
+		}
+
+		if (d.type == 1)
+		{
+		var graphpie = graph.append('g')
+			.attr('class','pie')
+			.attr(
+					'transform',
+					'translate('+ (-width/2+100*coeff) +','+ (-100+100*coeff) +') scale('+coeff+')'
+				)
+			;
+			//call pie graph to ram visualisation.
+			pie_graph(graphpie,data);
+		}
+	}
+		//--------------------------------------
 
 	function select_node(d)
 	{
 		/* jshint validthis:true */
 
-		if (d.id==last_id)
+		if (d.id === last_id)
 		{
 			previous_view();
 			return;
 		}
-		if (d.id != -1)
-		{
 
-		}
+		last_id = d.id;
+
 		// Marks this node as selected.
 
 		d3.select(this).classed('selected', true);
@@ -408,40 +461,6 @@ function molecule_graph(graph, data, width)
 
 		// Prevents the event from being re-catched by “graph”.
 		d3.event.stopPropagation();
-
-
-
-		//--------------------------------------
-		//area where pie where be call
-
-		if (d.type == 0)
-		{
-			var coeff = 0.5;
-			var graphpie = graph.append('g')
-			.attr('class','pie')
-			.attr(
-					'transform',
-					'translate('+ (-width/2+100*coeff) +','+ (-100+100*coeff) +') scale('+coeff+')'
-				)
-			;
-			//call pie graph to ram visualisation.
-			pie_2_graph(graphpie,data);
-		}
-		else if (d.type == 1)
-		{
-			var coeff = 0.5;
-			var graphpie = graph.append('g')
-			.attr('class','pie')
-			.attr(
-					'transform',
-					'translate('+ (-width/2+100*coeff) +','+ (-100+100*coeff) +') scale('+coeff+')'
-				)
-			;
-			//call pie graph to ram visualisation.
-			pie_graph(graphpie,data);
-		}
-
-		last_id = d.id;
 
 	}
 
@@ -713,40 +732,25 @@ function molecule_graph(graph, data, width)
 
 	function tick () {
 
-		/* useless because they are freeze
-			pool_node.attr(
-				'transform',
-				function (d) {
-					return 'translate('+ d.x +','+ d.y +')';
-				}
-			);
-		*/
-
 			host_node.attr(
 				'transform',
 				function (d) {
 					return 'translate('+ (d.x)+','+ (d.y) +')';
 				}
 			);
-
 			host_node.select('path').attr(
 				'transform',
 				function (d) {
 					var x = d.pool.x - d.x;
 					var y = d.pool.y - d.y;
-
 					var angle = Math.acos(x / Math.sqrt(x*x + y*y)) / Math.PI * 180 + 180;
-
 					return 'rotate('+ (y < 0 ? -angle : angle) +')';
 				}
 			);
-
 			vm_node.attr(
 				'transform',
 				function (d) {
 					return 'translate('+ (d.x) +','+ (d.y) +')';
-
-
 				}
 			);
 			vm_node.select('path').attr(
@@ -754,13 +758,10 @@ function molecule_graph(graph, data, width)
 				function (d) {
 					var x = d.host.x - d.x;
 					var y = d.host.y - d.y;
-
 					var angle = Math.acos(x / Math.sqrt(x*x + y*y)) / Math.PI * 180 + 180;
-
 					return 'rotate('+ (y < 0 ? -angle : angle) +')';
 				}
 			);
-
 			link
 				.attr('x1', function(d) { return d.source.x; })
 				.attr('y1', function(d) { return d.source.y; })

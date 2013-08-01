@@ -23,6 +23,20 @@
 
 	;
 
+	// ajoute des boutons
+    //------------------------------------------
+
+	 var graph = svg.append('g')
+		.attr(
+			'transform',
+			'translate('+width/2+','+height/2+') scale('+ coeff+')'
+		)
+	;
+	button_graph(graph, data, width/coeff);
+
+    //------------------------------------------
+
+
 	var graph = svg.append('g')
 		.attr(
 			'transform',

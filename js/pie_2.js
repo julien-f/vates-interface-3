@@ -46,10 +46,23 @@ function pie_2_graph(graph,data) {
 		.sort(null)
 		.value(function(d){ return d; })
 	;
+	//--------------------------------------
+
+	group.append("text")
+		.attr('dy',-15)
+		.attr('dx',-10)
+		.style('font-size','0.4em')
+		.text(data_lab[1].label);
+
+	group.append("text").attr('dy',-1)
+		.attr('dx',-15)
+		.style('font-size','0.4em')
+		.text(data_lab[0].IP);
 
 	//--------------------------------------
 	// CPU DONUTS
-	var	donuts_CPU = group.selectAll('.path').data(pie(tmp_DATA))
+	var	donuts_CPU = group
+		.selectAll('.path').data(pie(tmp_DATA))
 	;
 
 	var new_donuts = donuts_CPU
@@ -143,6 +156,45 @@ function pie_2_graph(graph,data) {
 		.text('USED MEMORY : '+tmp_DATA[0]+' of '+tmp_DATA[1]+' memory')
 	;
 	//----------------------------------------------------------------------------
+	// line
+
+	 arc = d3.svg.arc() //constructs a new arc generator
+    	.outerRadius(71)
+    	.innerRadius(70)
+    	 .startAngle(-PI/2)
+    	.endAngle(PI/2)
+    ;
+     pie = d3.layout.pie()
+		.startAngle(-Math.PI/2)
+		.endAngle(Math.PI/2)
+		.sort(null)
+	;
+	    donuts_RAM
+    	.append('path')
+		.attr('d', arc)
+		.style('fill','black')
+	;
+
+	 arc = d3.svg.arc() //constructs a new arc generator
+    	.outerRadius(82)
+    	.innerRadius(81)
+    	 .startAngle(-PI/2)
+    	.endAngle(PI/2)
+    ;
+     pie = d3.layout.pie()
+		.startAngle(-Math.PI/2)
+		.endAngle(Math.PI/2)
+		.sort(null)
+	;
+	    donuts_RAM
+    	.append('path')
+		.attr('d', arc)
+		.style('fill','black')
+	;
+
+
+	//----------------------------------------------------------------------------
+
 	function all_CPU_usage (data_CPU)
 	{
 		var CPU_usage = 0;
